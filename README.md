@@ -24,6 +24,13 @@ Cliente → Web (React, Vercel) → Negocio (Java, Render) ↔ PostgreSQL + pgve
 | [`docs/`](docs/) | Políticas para el RAG y diagramas | Markdown |
 
 ## Estado
-🚧 En construcción. Etapa actual: **1 — Estructura del proyecto**.
+🚧 En construcción. Etapa actual: **2 — El negocio en Java**.
+
+- [x] 0. Preparación del entorno
+- [x] 1. Estructura del proyecto, repositorio y CI
+- [ ] 2. El negocio en Java
+- [ ] 3. Publicación (Render, Neon, Vercel)
+- [ ] 4. El chatbot
+- [ ] 5. Pulido para reclutadores
 
 Todo el proyecto usa servicios gratuitos. Las llaves y contraseñas nunca se guardan en el código.

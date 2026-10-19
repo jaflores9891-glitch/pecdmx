@@ -53,9 +53,16 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - No tocar el Python 3.14 del sistema.
 - Los comandos con `sudo` los corre Jesús en su terminal: Claude nunca escribe su contraseña.
 
+## Git y GitHub
+- Repo público: https://github.com/jaflores9891-glitch/pecdmx
+- `main` está protegida: nada se sube directo. Cada cambio va en una rama
+  (`feat/...`, `fix/...`, `docs/...`, `ci/...`, `test/...`), entra por pull request y solo se une con **CI OK** en verde.
+- Mensajes de commit en estilo Conventional Commits (`feat:`, `fix:`, `docs:`, `ci:`, `test:`, `chore:`).
+- La CI vive en `.github/workflows/ci.yml`. Cada job nuevo se agrega a `needs` del job `ci-ok`.
+
 ## Etapas
 - [x] 0. Preparación del entorno
-- [ ] 1. Estructura del proyecto, repo en GitHub y CI
+- [x] 1. Estructura del proyecto, repo en GitHub y CI
 - [ ] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
 - [ ] 3. Publicación: Render + Neon, web en Vercel, CD
 - [ ] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
