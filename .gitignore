@@ -1,0 +1,51 @@
+# ==========================================================
+# Archivos que Git NUNCA debe subir a GitHub
+# ==========================================================
+
+# --- Secretos (llaves y contraseñas) ---
+# El .env real nunca se sube. El .env.example (sin valores reales) sí.
+.env
+.env.*
+!.env.example
+
+# --- Java / Maven (backend) ---
+target/
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# --- Python (chatbot) ---
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# --- Modelos de IA descargados (se bajan de Hugging Face, no se guardan aquí) ---
+*.onnx
+models/
+
+# --- Node / React (web) ---
+node_modules/
+dist/
+.vite/
+coverage/
+*.tsbuildinfo
+
+# --- Editores ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# --- Sistema operativo ---
+.DS_Store
+Thumbs.db
+*:Zone.Identifier
+
+# --- Registros ---
+*.log
+logs/
