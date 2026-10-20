@@ -57,6 +57,8 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - Repo público: https://github.com/jaflores9891-glitch/pecdmx
 - `main` está protegida: nada se sube directo. Cada cambio va en una rama
   (`feat/...`, `fix/...`, `docs/...`, `ci/...`, `test/...`), entra por pull request y solo se une con **CI OK** en verde.
+- Los PR se unen con **rebase** (`gh pr merge N --rebase --delete-branch`), no con squash,
+  para que `main` conserve un commit por funcionalidad.
 - Mensajes de commit en estilo Conventional Commits (`feat:`, `fix:`, `docs:`, `ci:`, `test:`, `chore:`).
 - La CI vive en `.github/workflows/ci.yml`. Cada job nuevo se agrega a `needs` del job `ci-ok`.
 
