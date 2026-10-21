@@ -65,7 +65,7 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 ## Etapas
 - [x] 0. Preparación del entorno
 - [x] 1. Estructura del proyecto, repo en GitHub y CI
-- [ ] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
+- [x] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
 - [ ] 3. Publicación: Render + Neon, web en Vercel, CD
 - [ ] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
 - [ ] 5. Pulido para reclutadores

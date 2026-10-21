@@ -23,12 +23,26 @@ Cliente → Web (React, Vercel) → Negocio (Java, Render) ↔ PostgreSQL + pgve
 | [`web/`](web/) | Página pública | React + TypeScript (Vite) |
 | [`docs/`](docs/) | Políticas para el RAG y diagramas | Markdown |
 
+## API del negocio
+| Petición | Quién | Para qué |
+|---|---|---|
+| `GET /api/sucursales` | Cualquiera | Lista de sucursales |
+| `POST /api/cotizaciones` | Cualquiera | Cotizar un envío (zona, peso cobrable, subtotal, IVA y total) |
+| `GET /api/guias/{numero}` | Cualquiera | Rastrear una guía (sin datos personales) |
+| `POST /api/sesiones` | Empleados y gerentes | Iniciar sesión y recibir un gafete JWT de 8 horas |
+| `POST /api/guias` | Empleado (de su sucursal) o gerente | Registrar una guía |
+| `POST /api/guias/{numero}/eventos` | Empleado (en su sucursal) o gerente | Cambiar el estado de una guía |
+| `GET /api/guias/{numero}/detalle` | Empleado del origen o destino, o gerente | Ver destinatario y montos |
+| `POST /api/usuarios` | Gerente | Dar de alta a un empleado |
+
+Los errores siguen el estándar Problem Details (RFC 9457), con mensajes en español.
+
 ## Estado
-🚧 En construcción. Etapa actual: **2 — El negocio en Java**.
+🚧 En construcción. Etapa actual: **3 — Publicación**.
 
 - [x] 0. Preparación del entorno
 - [x] 1. Estructura del proyecto, repositorio y CI
-- [ ] 2. El negocio en Java
+- [x] 2. El negocio en Java
 - [ ] 3. Publicación (Render, Neon, Vercel)
 - [ ] 4. El chatbot
 - [ ] 5. Pulido para reclutadores
