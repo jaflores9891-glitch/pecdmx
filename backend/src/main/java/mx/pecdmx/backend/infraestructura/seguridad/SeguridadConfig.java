@@ -40,6 +40,8 @@ class SeguridadConfig {
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                         // Donde Spring responde los errores; si no fuera público, todo error se vería como 401.
                         .requestMatchers("/error").permitAll()
+                        // Operar guías: personal con cuenta. (El rastreo público ya quedó permitido arriba.)
+                        .requestMatchers("/api/guias", "/api/guias/**").hasAnyRole("EMPLEADO", "GERENTE")
                         // Todo lo demás pide gafete.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(servidor -> servidor.jwt(jwt -> jwt.jwtAuthenticationConverter(rolesDelGafete())));
