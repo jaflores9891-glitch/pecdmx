@@ -1,6 +1,7 @@
 package mx.pecdmx.backend.dominio.guia;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 import mx.pecdmx.backend.dominio.sucursal.Sucursal;
 
@@ -16,6 +17,8 @@ public record EventoDeRastreo(EstadoEnvio estado, Instant fechaHora, Sucursal su
         Objects.requireNonNull(estado, "El estado del evento es obligatorio");
         Objects.requireNonNull(fechaHora, "La fecha y hora del evento son obligatorias");
         Objects.requireNonNull(sucursal, "La sucursal del evento es obligatoria");
+        // PostgreSQL guarda microsegundos; recortar aquí hace que la hora guardada y la leída sean idénticas.
+        fechaHora = fechaHora.truncatedTo(ChronoUnit.MICROS);
         nota = nota == null ? "" : nota.strip();
         if (nota.length() > LONGITUD_MAXIMA_NOTA) {
             throw new GuiaInvalidaException(
