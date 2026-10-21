@@ -1,8 +1,11 @@
 package mx.pecdmx.backend.infraestructura.web;
 
 import java.util.List;
+import mx.pecdmx.backend.aplicacion.guia.CambioDeEstadoRechazadoException;
+import mx.pecdmx.backend.aplicacion.guia.GuiaDesactualizadaException;
 import mx.pecdmx.backend.aplicacion.guia.GuiaNoEncontradaException;
 import mx.pecdmx.backend.aplicacion.guia.OperacionNoPermitidaException;
+import mx.pecdmx.backend.aplicacion.guia.SolicitudInvalidaException;
 import mx.pecdmx.backend.aplicacion.usuario.CredencialesInvalidasException;
 import mx.pecdmx.backend.dominio.guia.NumeroDeGuiaInvalidoException;
 import mx.pecdmx.backend.dominio.sucursal.SucursalDesconocidaException;
@@ -35,7 +38,8 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
     @ExceptionHandler({
         SucursalDesconocidaException.class,
         PaqueteInvalidoException.class,
-        NumeroDeGuiaInvalidoException.class
+        NumeroDeGuiaInvalidoException.class,
+        SolicitudInvalidaException.class
     })
     ProblemDetail datosInvalidos(RuntimeException error) {
         return problema(HttpStatus.BAD_REQUEST, "Datos inválidos", error.getMessage());
@@ -57,6 +61,18 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
         return problema(HttpStatus.NOT_FOUND, "Guía no encontrada", error.getMessage());
     }
 
+    /** Los datos están bien escritos, pero chocan con cómo va la guía ahora (409 Conflict). */
+    @ExceptionHandler(CambioDeEstadoRechazadoException.class)
+    ProblemDetail cambioRechazado(CambioDeEstadoRechazadoException error) {
+        return problema(HttpStatus.CONFLICT, "Cambio de estado rechazado", error.getMessage());
+    }
+
+    /** Otra persona modificó la guía al mismo tiempo (409 Conflict). */
+    @ExceptionHandler(GuiaDesactualizadaException.class)
+    ProblemDetail guiaDesactualizada(GuiaDesactualizadaException error) {
+        return problema(HttpStatus.CONFLICT, "Guía modificada", error.getMessage());
+    }
+
     /** Cualquier error no previsto: el cliente recibe un mensaje genérico y el detalle técnico va solo al registro. */
     @ExceptionHandler(Exception.class)
     ProblemDetail errorInesperado(Exception error) {
@@ -65,7 +81,7 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
                 "Ocurrió un error inesperado. Intenta de nuevo en unos minutos.");
     }
 
-    /** Faltan campos obligatorios en el JSON (las anotaciones @NotNull, @NotBlank de los DTOs). */
+    /** Faltan campos obligatorios o no cumplen su formato (las anotaciones @NotNull, @Size... de los DTOs). */
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException error, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
@@ -74,7 +90,7 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
                 .sorted()
                 .toList();
         ProblemDetail problema = problema(HttpStatus.BAD_REQUEST, "Datos incompletos",
-                "Faltan datos obligatorios en la petición.");
+                "Faltan datos o hay datos con formato inválido en la petición.");
         problema.setProperty("errores", errores);
         return ResponseEntity.badRequest().body(problema);
     }
