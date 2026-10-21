@@ -54,6 +54,11 @@
 			<groupId>org.flywaydb</groupId>
 			<artifactId>flyway-database-postgresql</artifactId>
 		</dependency>
+		<!-- Solo el cifrado de contraseñas (BCrypt), sin activar todavía el guardia de Spring Security. -->
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-crypto</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
