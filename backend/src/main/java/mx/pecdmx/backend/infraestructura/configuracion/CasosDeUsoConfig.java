@@ -13,8 +13,10 @@ import mx.pecdmx.backend.aplicacion.guia.ServicioDeDetalleDeGuias;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRastreo;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRegistroDeGuias;
 import mx.pecdmx.backend.aplicacion.usuario.CifradorDeContrasenas;
+import mx.pecdmx.backend.aplicacion.usuario.DarDeAltaEmpleado;
 import mx.pecdmx.backend.aplicacion.usuario.EmisorDeGafetes;
 import mx.pecdmx.backend.aplicacion.usuario.RepositorioDeUsuarios;
+import mx.pecdmx.backend.aplicacion.usuario.ServicioDeAltaDeEmpleados;
 import mx.pecdmx.backend.aplicacion.usuario.ServicioDeGerenteInicial;
 import mx.pecdmx.backend.aplicacion.usuario.ServicioDeSesiones;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +65,11 @@ class CasosDeUsoConfig {
     ServicioDeSesiones servicioDeSesiones(RepositorioDeUsuarios repositorioDeUsuarios,
             CifradorDeContrasenas cifrador, EmisorDeGafetes emisorDeGafetes, Clock reloj) {
         return new ServicioDeSesiones(repositorioDeUsuarios, cifrador, emisorDeGafetes, reloj);
+    }
+
+    @Bean
+    DarDeAltaEmpleado darDeAltaEmpleado(RepositorioDeUsuarios repositorioDeUsuarios, CifradorDeContrasenas cifrador) {
+        return new ServicioDeAltaDeEmpleados(repositorioDeUsuarios, cifrador);
     }
 
     @Bean

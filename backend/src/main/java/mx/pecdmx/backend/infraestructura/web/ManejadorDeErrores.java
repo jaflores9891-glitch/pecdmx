@@ -6,10 +6,13 @@ import mx.pecdmx.backend.aplicacion.guia.GuiaDesactualizadaException;
 import mx.pecdmx.backend.aplicacion.guia.GuiaNoEncontradaException;
 import mx.pecdmx.backend.aplicacion.guia.OperacionNoPermitidaException;
 import mx.pecdmx.backend.aplicacion.guia.SolicitudInvalidaException;
+import mx.pecdmx.backend.aplicacion.usuario.ContrasenaInseguraException;
 import mx.pecdmx.backend.aplicacion.usuario.CredencialesInvalidasException;
+import mx.pecdmx.backend.aplicacion.usuario.UsuarioYaExisteException;
 import mx.pecdmx.backend.dominio.guia.NumeroDeGuiaInvalidoException;
 import mx.pecdmx.backend.dominio.sucursal.SucursalDesconocidaException;
 import mx.pecdmx.backend.dominio.tarifa.PaqueteInvalidoException;
+import mx.pecdmx.backend.dominio.usuario.UsuarioInvalidoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -39,7 +42,9 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
         SucursalDesconocidaException.class,
         PaqueteInvalidoException.class,
         NumeroDeGuiaInvalidoException.class,
-        SolicitudInvalidaException.class
+        SolicitudInvalidaException.class,
+        UsuarioInvalidoException.class,
+        ContrasenaInseguraException.class
     })
     ProblemDetail datosInvalidos(RuntimeException error) {
         return problema(HttpStatus.BAD_REQUEST, "Datos inválidos", error.getMessage());
@@ -71,6 +76,12 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
     @ExceptionHandler(GuiaDesactualizadaException.class)
     ProblemDetail guiaDesactualizada(GuiaDesactualizadaException error) {
         return problema(HttpStatus.CONFLICT, "Guía modificada", error.getMessage());
+    }
+
+    /** Ya hay una cuenta con ese correo (409 Conflict). */
+    @ExceptionHandler(UsuarioYaExisteException.class)
+    ProblemDetail usuarioYaExiste(UsuarioYaExisteException error) {
+        return problema(HttpStatus.CONFLICT, "Usuario existente", error.getMessage());
     }
 
     /** Cualquier error no previsto: el cliente recibe un mensaje genérico y el detalle técnico va solo al registro. */
