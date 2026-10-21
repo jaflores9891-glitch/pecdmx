@@ -1,6 +1,7 @@
 package mx.pecdmx.backend.infraestructura.web;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,6 +27,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
@@ -101,5 +103,76 @@ class ApiPublicaTest {
                 .andExpect(jsonPath("$.historial[1].nota").value("Salió en ruta a Monterrey"))
                 .andExpect(content().string(not(containsString("Ana López"))))
                 .andExpect(content().string(not(containsString("359.60"))));
+    }
+
+    // --- Errores: cada uno con su código y un mensaje claro en español ---
+
+    private ResultActions cotizar(String json) throws Exception {
+        return mvc.perform(post("/api/cotizaciones").contentType(MediaType.APPLICATION_JSON).content(json));
+    }
+
+    @Test
+    void unaSucursalInventadaDa400ConSuMensaje() throws Exception {
+        cotizar("""
+                {"origen": "XYZ", "destino": "MTY", "pesoKg": 3, "largoCm": 10, "anchoCm": 10, "altoCm": 10}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.title").value("Datos inválidos"))
+                .andExpect(jsonPath("$.detail").value(containsString("'XYZ'")));
+    }
+
+    @Test
+    void unPaqueteDeMasDe70KgDa400() throws Exception {
+        cotizar("""
+                {"origen": "CDMX", "destino": "MTY", "pesoKg": 80, "largoCm": 10, "anchoCm": 10, "altoCm": 10}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(containsString("70 kg")));
+    }
+
+    @Test
+    void siFaltanDatosDa400ConLaListaDeLoQueFalta() throws Exception {
+        cotizar("""
+                {"origen": "CDMX", "largoCm": 10, "anchoCm": 10, "altoCm": 10}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Datos incompletos"))
+                .andExpect(jsonPath("$.errores", hasSize(2)))
+                .andExpect(jsonPath("$.errores", hasItem("El destino es obligatorio")))
+                .andExpect(jsonPath("$.errores", hasItem("El peso es obligatorio")));
+    }
+
+    @Test
+    void unJsonConTiposEquivocadosDa400() throws Exception {
+        cotizar("""
+                {"origen": "CDMX", "destino": "MTY", "pesoKg": "abc", "largoCm": 10, "anchoCm": 10, "altoCm": 10}
+                """)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Formato inválido"));
+    }
+
+    @Test
+    void unaGuiaMalEscritaDa400() throws Exception {
+        mvc.perform(get("/api/guias/PEC2610190042"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value(containsString("Revisa que esté bien escrito")));
+    }
+
+    @Test
+    void unaGuiaQueNoExisteDa404() throws Exception {
+        String inexistente = repositorio.siguienteNumero().valor();
+
+        mvc.perform(get("/api/guias/" + inexistente))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.title").value("Guía no encontrada"))
+                .andExpect(jsonPath("$.detail").value(containsString(inexistente)));
+    }
+
+    @Test
+    void unaUrlQueNoExisteSigueDando404YNo500() throws Exception {
+        mvc.perform(get("/api/no-existe"))
+                .andExpect(status().isNotFound());
     }
 }
