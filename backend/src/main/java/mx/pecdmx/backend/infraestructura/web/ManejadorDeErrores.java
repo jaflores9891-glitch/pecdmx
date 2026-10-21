@@ -2,6 +2,7 @@ package mx.pecdmx.backend.infraestructura.web;
 
 import java.util.List;
 import mx.pecdmx.backend.aplicacion.guia.GuiaNoEncontradaException;
+import mx.pecdmx.backend.aplicacion.usuario.CredencialesInvalidasException;
 import mx.pecdmx.backend.dominio.guia.NumeroDeGuiaInvalidoException;
 import mx.pecdmx.backend.dominio.sucursal.SucursalDesconocidaException;
 import mx.pecdmx.backend.dominio.tarifa.PaqueteInvalidoException;
@@ -37,6 +38,11 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
     })
     ProblemDetail datosInvalidos(RuntimeException error) {
         return problema(HttpStatus.BAD_REQUEST, "Datos inválidos", error.getMessage());
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    ProblemDetail credencialesInvalidas(CredencialesInvalidasException error) {
+        return problema(HttpStatus.UNAUTHORIZED, "No autorizado", error.getMessage());
     }
 
     @ExceptionHandler(GuiaNoEncontradaException.class)
