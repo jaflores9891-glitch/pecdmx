@@ -5,6 +5,9 @@ import mx.pecdmx.backend.aplicacion.cotizacion.ServicioDeCotizacion;
 import mx.pecdmx.backend.aplicacion.guia.RastrearGuia;
 import mx.pecdmx.backend.aplicacion.guia.RepositorioDeGuias;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRastreo;
+import mx.pecdmx.backend.aplicacion.usuario.CifradorDeContrasenas;
+import mx.pecdmx.backend.aplicacion.usuario.RepositorioDeUsuarios;
+import mx.pecdmx.backend.aplicacion.usuario.ServicioDeGerenteInicial;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,5 +27,11 @@ class CasosDeUsoConfig {
     @Bean
     RastrearGuia rastrearGuia(RepositorioDeGuias repositorioDeGuias) {
         return new ServicioDeRastreo(repositorioDeGuias);
+    }
+
+    @Bean
+    ServicioDeGerenteInicial servicioDeGerenteInicial(
+            RepositorioDeUsuarios repositorioDeUsuarios, CifradorDeContrasenas cifrador) {
+        return new ServicioDeGerenteInicial(repositorioDeUsuarios, cifrador);
     }
 }
