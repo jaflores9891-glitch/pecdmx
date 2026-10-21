@@ -2,6 +2,7 @@ package mx.pecdmx.backend.infraestructura.web;
 
 import jakarta.validation.Valid;
 import java.net.URI;
+import mx.pecdmx.backend.aplicacion.guia.CambiarEstadoDeGuia;
 import mx.pecdmx.backend.aplicacion.guia.ConsultarDetalleDeGuia;
 import mx.pecdmx.backend.aplicacion.guia.RastrearGuia;
 import mx.pecdmx.backend.aplicacion.guia.RegistrarGuia;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * GET  /api/guias/{numero}         → rastreo público.
  * POST /api/guias                  → registrar una guía (empleado o gerente).
  * GET  /api/guias/{numero}/detalle → detalle con destinatario y montos (empleado o gerente).
+ * POST /api/guias/{numero}/eventos → cambiar el estado (empleado o gerente).
  */
 @RestController
 @RequestMapping("/api/guias")
@@ -28,11 +30,14 @@ class GuiasControlador {
     private final RastrearGuia rastrearGuia;
     private final RegistrarGuia registrarGuia;
     private final ConsultarDetalleDeGuia consultarDetalle;
+    private final CambiarEstadoDeGuia cambiarEstado;
 
-    GuiasControlador(RastrearGuia rastrearGuia, RegistrarGuia registrarGuia, ConsultarDetalleDeGuia consultarDetalle) {
+    GuiasControlador(RastrearGuia rastrearGuia, RegistrarGuia registrarGuia,
+            ConsultarDetalleDeGuia consultarDetalle, CambiarEstadoDeGuia cambiarEstado) {
         this.rastrearGuia = rastrearGuia;
         this.registrarGuia = registrarGuia;
         this.consultarDetalle = consultarDetalle;
+        this.cambiarEstado = cambiarEstado;
     }
 
     @GetMapping("/{numero}")
@@ -52,5 +57,12 @@ class GuiasControlador {
     @GetMapping("/{numero}/detalle")
     DetalleDeGuiaJson detalle(@PathVariable String numero, @AuthenticationPrincipal Jwt gafete) {
         return DetalleDeGuiaJson.de(consultarDetalle.consultar(numero, OperadorDelGafete.de(gafete)));
+    }
+
+    @PostMapping("/{numero}/eventos")
+    DetalleDeGuiaJson cambiarEstado(@PathVariable String numero,
+            @Valid @RequestBody SolicitudCambioDeEstadoJson solicitud, @AuthenticationPrincipal Jwt gafete) {
+        Guia guia = cambiarEstado.cambiar(solicitud.aSolicitud(numero), OperadorDelGafete.de(gafete));
+        return DetalleDeGuiaJson.de(guia);
     }
 }

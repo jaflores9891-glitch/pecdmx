@@ -3,10 +3,12 @@ package mx.pecdmx.backend.infraestructura.configuracion;
 import java.time.Clock;
 import mx.pecdmx.backend.aplicacion.cotizacion.CotizarEnvio;
 import mx.pecdmx.backend.aplicacion.cotizacion.ServicioDeCotizacion;
+import mx.pecdmx.backend.aplicacion.guia.CambiarEstadoDeGuia;
 import mx.pecdmx.backend.aplicacion.guia.ConsultarDetalleDeGuia;
 import mx.pecdmx.backend.aplicacion.guia.RastrearGuia;
 import mx.pecdmx.backend.aplicacion.guia.RegistrarGuia;
 import mx.pecdmx.backend.aplicacion.guia.RepositorioDeGuias;
+import mx.pecdmx.backend.aplicacion.guia.ServicioDeCambioDeEstado;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeDetalleDeGuias;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRastreo;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRegistroDeGuias;
@@ -44,6 +46,11 @@ class CasosDeUsoConfig {
     @Bean
     ConsultarDetalleDeGuia consultarDetalleDeGuia(RepositorioDeGuias repositorioDeGuias) {
         return new ServicioDeDetalleDeGuias(repositorioDeGuias);
+    }
+
+    @Bean
+    CambiarEstadoDeGuia cambiarEstadoDeGuia(RepositorioDeGuias repositorioDeGuias, Clock reloj) {
+        return new ServicioDeCambioDeEstado(repositorioDeGuias, reloj);
     }
 
     /** El reloj del sistema, en UTC. En los tests se puede cambiar por uno fijo. */
