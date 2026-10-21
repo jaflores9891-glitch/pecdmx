@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -47,9 +49,11 @@ class ApiPublicaTest {
     // MockMvc simula peticiones HTTP sin abrir un servidor real.
     private MockMvc mvc;
 
+    // springSecurity() hace que las peticiones pasen por el guardia, como en producción:
+    // así se comprueba que todo lo de esta clase sigue abierto sin gafete.
     @BeforeEach
     void prepararMockMvc() {
-        mvc = MockMvcBuilders.webAppContextSetup(contexto).build();
+        mvc = MockMvcBuilders.webAppContextSetup(contexto).apply(springSecurity()).build();
     }
 
     @Test
@@ -170,9 +174,10 @@ class ApiPublicaTest {
                 .andExpect(jsonPath("$.detail").value(containsString(inexistente)));
     }
 
+    // Con gafete, porque sin él el guardia responde 401 a cualquier ruta no pública (ver SeguridadApiTest).
     @Test
     void unaUrlQueNoExisteSigueDando404YNo500() throws Exception {
-        mvc.perform(get("/api/no-existe"))
+        mvc.perform(get("/api/no-existe").with(jwt()))
                 .andExpect(status().isNotFound());
     }
 }

@@ -1,13 +1,16 @@
 package mx.pecdmx.backend.infraestructura.configuracion;
 
+import java.time.Clock;
 import mx.pecdmx.backend.aplicacion.cotizacion.CotizarEnvio;
 import mx.pecdmx.backend.aplicacion.cotizacion.ServicioDeCotizacion;
 import mx.pecdmx.backend.aplicacion.guia.RastrearGuia;
 import mx.pecdmx.backend.aplicacion.guia.RepositorioDeGuias;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRastreo;
 import mx.pecdmx.backend.aplicacion.usuario.CifradorDeContrasenas;
+import mx.pecdmx.backend.aplicacion.usuario.EmisorDeGafetes;
 import mx.pecdmx.backend.aplicacion.usuario.RepositorioDeUsuarios;
 import mx.pecdmx.backend.aplicacion.usuario.ServicioDeGerenteInicial;
+import mx.pecdmx.backend.aplicacion.usuario.ServicioDeSesiones;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,6 +30,18 @@ class CasosDeUsoConfig {
     @Bean
     RastrearGuia rastrearGuia(RepositorioDeGuias repositorioDeGuias) {
         return new ServicioDeRastreo(repositorioDeGuias);
+    }
+
+    /** El reloj del sistema, en UTC. En los tests se puede cambiar por uno fijo. */
+    @Bean
+    Clock reloj() {
+        return Clock.systemUTC();
+    }
+
+    @Bean
+    ServicioDeSesiones servicioDeSesiones(RepositorioDeUsuarios repositorioDeUsuarios,
+            CifradorDeContrasenas cifrador, EmisorDeGafetes emisorDeGafetes, Clock reloj) {
+        return new ServicioDeSesiones(repositorioDeUsuarios, cifrador, emisorDeGafetes, reloj);
     }
 
     @Bean
