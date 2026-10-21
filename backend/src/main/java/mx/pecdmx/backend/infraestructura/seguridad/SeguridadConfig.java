@@ -42,6 +42,8 @@ class SeguridadConfig {
                         .requestMatchers("/error").permitAll()
                         // Operar guías: personal con cuenta. (El rastreo público ya quedó permitido arriba.)
                         .requestMatchers("/api/guias", "/api/guias/**").hasAnyRole("EMPLEADO", "GERENTE")
+                        // Cuentas de empleados: solo gerentes (el caso de uso también lo revisa).
+                        .requestMatchers("/api/usuarios", "/api/usuarios/**").hasRole("GERENTE")
                         // Todo lo demás pide gafete.
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(servidor -> servidor.jwt(jwt -> jwt.jwtAuthenticationConverter(rolesDelGafete())));
