@@ -47,10 +47,14 @@ public record Usuario(Correo correo, String nombre, Rol rol, Sucursal sucursal, 
         return Optional.ofNullable(sucursal);
     }
 
-    /** Un gerente opera en cualquier sucursal; un empleado, solo en la suya. */
+    /** Este usuario como quien opera en el sistema (lo que va en su gafete). */
+    public Operador comoOperador() {
+        return new Operador(correo, rol, sucursal);
+    }
+
+    /** Un gerente opera en cualquier sucursal; un empleado, solo en la suya. La regla vive en {@link Operador}. */
     public boolean puedeOperarEn(Sucursal lugar) {
-        Objects.requireNonNull(lugar, "La sucursal es obligatoria");
-        return rol == Rol.GERENTE || sucursal == lugar;
+        return comoOperador().puedeOperarEn(lugar);
     }
 
     /** Nunca muestra la contraseña cifrada (por si el usuario termina en un log). */

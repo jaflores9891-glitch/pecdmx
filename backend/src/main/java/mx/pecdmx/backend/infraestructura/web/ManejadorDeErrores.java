@@ -2,6 +2,7 @@ package mx.pecdmx.backend.infraestructura.web;
 
 import java.util.List;
 import mx.pecdmx.backend.aplicacion.guia.GuiaNoEncontradaException;
+import mx.pecdmx.backend.aplicacion.guia.OperacionNoPermitidaException;
 import mx.pecdmx.backend.aplicacion.usuario.CredencialesInvalidasException;
 import mx.pecdmx.backend.dominio.guia.NumeroDeGuiaInvalidoException;
 import mx.pecdmx.backend.dominio.sucursal.SucursalDesconocidaException;
@@ -43,6 +44,12 @@ class ManejadorDeErrores extends ResponseEntityExceptionHandler {
     @ExceptionHandler(CredencialesInvalidasException.class)
     ProblemDetail credencialesInvalidas(CredencialesInvalidasException error) {
         return problema(HttpStatus.UNAUTHORIZED, "No autorizado", error.getMessage());
+    }
+
+    /** Tiene gafete, pero su rol o su sucursal no le permiten esta operación. */
+    @ExceptionHandler(OperacionNoPermitidaException.class)
+    ProblemDetail operacionNoPermitida(OperacionNoPermitidaException error) {
+        return problema(HttpStatus.FORBIDDEN, "Operación no permitida", error.getMessage());
     }
 
     @ExceptionHandler(GuiaNoEncontradaException.class)

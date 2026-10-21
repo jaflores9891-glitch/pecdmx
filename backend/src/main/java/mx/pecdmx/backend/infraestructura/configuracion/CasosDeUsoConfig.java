@@ -3,9 +3,13 @@ package mx.pecdmx.backend.infraestructura.configuracion;
 import java.time.Clock;
 import mx.pecdmx.backend.aplicacion.cotizacion.CotizarEnvio;
 import mx.pecdmx.backend.aplicacion.cotizacion.ServicioDeCotizacion;
+import mx.pecdmx.backend.aplicacion.guia.ConsultarDetalleDeGuia;
 import mx.pecdmx.backend.aplicacion.guia.RastrearGuia;
+import mx.pecdmx.backend.aplicacion.guia.RegistrarGuia;
 import mx.pecdmx.backend.aplicacion.guia.RepositorioDeGuias;
+import mx.pecdmx.backend.aplicacion.guia.ServicioDeDetalleDeGuias;
 import mx.pecdmx.backend.aplicacion.guia.ServicioDeRastreo;
+import mx.pecdmx.backend.aplicacion.guia.ServicioDeRegistroDeGuias;
 import mx.pecdmx.backend.aplicacion.usuario.CifradorDeContrasenas;
 import mx.pecdmx.backend.aplicacion.usuario.EmisorDeGafetes;
 import mx.pecdmx.backend.aplicacion.usuario.RepositorioDeUsuarios;
@@ -30,6 +34,16 @@ class CasosDeUsoConfig {
     @Bean
     RastrearGuia rastrearGuia(RepositorioDeGuias repositorioDeGuias) {
         return new ServicioDeRastreo(repositorioDeGuias);
+    }
+
+    @Bean
+    RegistrarGuia registrarGuia(CotizarEnvio cotizarEnvio, RepositorioDeGuias repositorioDeGuias, Clock reloj) {
+        return new ServicioDeRegistroDeGuias(cotizarEnvio, repositorioDeGuias, reloj);
+    }
+
+    @Bean
+    ConsultarDetalleDeGuia consultarDetalleDeGuia(RepositorioDeGuias repositorioDeGuias) {
+        return new ServicioDeDetalleDeGuias(repositorioDeGuias);
     }
 
     /** El reloj del sistema, en UTC. En los tests se puede cambiar por uno fijo. */
