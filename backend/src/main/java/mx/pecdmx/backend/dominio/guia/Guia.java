@@ -42,26 +42,66 @@ public final class Guia {
     }
 
     /**
+     * Rearma una guía que ya existía (por ejemplo, leída de la base de datos) con su historial completo.
+     * No crea eventos nuevos, pero vuelve a revisar el historial con las mismas reglas que {@link #cambiarEstado},
+     * para detectar datos alterados.
+     *
+     * @throws GuiaInvalidaException si el historial está vacío, no empieza en REGISTRADA en el origen
+     *     o algún evento rompe las reglas
+     */
+    public static Guia reconstruir(
+            NumeroDeGuia numero, Cotizacion cotizacion, String nombreDestinatario, List<EventoDeRastreo> historial) {
+        Guia guia = new Guia(numero, cotizacion, nombreDestinatario);
+        if (historial == null || historial.isEmpty()) {
+            throw historialDanado(numero, "no tiene eventos.");
+        }
+
+        EventoDeRastreo primero = historial.getFirst();
+        if (primero.estado() != EstadoEnvio.REGISTRADA || primero.sucursal() != guia.origen()) {
+            throw historialDanado(numero, "debe empezar en 'Registrada' en la sucursal de origen ("
+                    + guia.origen().codigo() + ").");
+        }
+        guia.historial.add(primero);
+
+        for (EventoDeRastreo evento : historial.subList(1, historial.size())) {
+            try {
+                guia.agregarEvento(evento);
+            } catch (TransicionInvalidaException | GuiaInvalidaException error) {
+                throw historialDanado(numero, error.getMessage());
+            }
+        }
+        return guia;
+    }
+
+    /**
      * Avanza la guía a un estado nuevo y lo anota en el historial.
      *
      * @throws TransicionInvalidaException si el salto de estado no está permitido
      * @throws GuiaInvalidaException si la sucursal no corresponde o la fecha es anterior al último evento
      */
     public void cambiarEstado(EstadoEnvio nuevoEstado, Sucursal sucursal, String nota, Instant fechaHora) {
-        EventoDeRastreo evento = new EventoDeRastreo(nuevoEstado, fechaHora, sucursal, nota);
+        agregarEvento(new EventoDeRastreo(nuevoEstado, fechaHora, sucursal, nota));
+    }
 
+    /** Las reglas para sumar un evento al historial. Las usan tanto {@link #cambiarEstado} como {@link #reconstruir}. */
+    private void agregarEvento(EventoDeRastreo evento) {
+        EstadoEnvio nuevoEstado = evento.estado();
         estadoActual().validarPasoA(nuevoEstado);
-        if (SOLO_EN_DESTINO.contains(nuevoEstado) && sucursal != destino()) {
+        if (SOLO_EN_DESTINO.contains(nuevoEstado) && evento.sucursal() != destino()) {
             throw new GuiaInvalidaException("El estado '" + nuevoEstado.nombre()
                     + "' solo puede registrarse en la sucursal de destino (" + destino().codigo()
-                    + "), no en " + sucursal.codigo() + ".");
+                    + "), no en " + evento.sucursal().codigo() + ".");
         }
-        if (fechaHora.isBefore(ultimoEvento().fechaHora())) {
+        if (evento.fechaHora().isBefore(ultimoEvento().fechaHora())) {
             throw new GuiaInvalidaException("La fecha del nuevo evento no puede ser anterior a la del último ("
                     + ultimoEvento().fechaHora() + ").");
         }
 
         historial.add(evento);
+    }
+
+    private static GuiaInvalidaException historialDanado(NumeroDeGuia numero, String detalle) {
+        return new GuiaInvalidaException("El historial guardado de la guía " + numero + " no es válido: " + detalle);
     }
 
     private static String validarNombre(String nombre) {

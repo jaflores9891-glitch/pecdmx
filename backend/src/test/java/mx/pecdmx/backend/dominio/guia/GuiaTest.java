@@ -16,7 +16,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import mx.pecdmx.backend.dominio.cotizacion.Cotizacion;
+import mx.pecdmx.backend.dominio.sucursal.Sucursal;
 import mx.pecdmx.backend.dominio.tarifa.Paquete;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -162,5 +164,73 @@ class GuiaTest {
         assertThatThrownBy(() -> guia.historial().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
         assertThat(guia.historial()).hasSize(1);
+    }
+
+    // --- reconstruir: rearmar una guía guardada ---
+
+    private static EventoDeRastreo evento(EstadoEnvio estado, Sucursal sucursal, int horas) {
+        return new EventoDeRastreo(estado, horasDespues(horas), sucursal, "");
+    }
+
+    @Test
+    void reconstruirDevuelveLaMismaGuiaQueSeGuardo() {
+        guia.cambiarEstado(EN_TRANSITO, CDMX, "Salió en ruta", horasDespues(2));
+        guia.cambiarEstado(INCIDENCIA, QRO, "Retraso", horasDespues(5));
+
+        Guia rearmada = Guia.reconstruir(NUMERO, CDMX_A_MTY, guia.nombreDestinatario(), guia.historial());
+
+        assertThat(rearmada.numero()).isEqualTo(guia.numero());
+        assertThat(rearmada.nombreDestinatario()).isEqualTo("Ana López");
+        assertThat(rearmada.estadoActual()).isEqualTo(INCIDENCIA);
+        assertThat(rearmada.historial()).isEqualTo(guia.historial());
+    }
+
+    @Test
+    void unaGuiaReconstruidaSigueAplicandoLasReglas() {
+        Guia rearmada = Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López", List.of(evento(REGISTRADA, CDMX, 0)));
+
+        rearmada.cambiarEstado(EN_TRANSITO, CDMX, null, horasDespues(1));
+        assertThatThrownBy(() -> rearmada.cambiarEstado(ENTREGADA, MTY, null, horasDespues(2)))
+                .isInstanceOf(TransicionInvalidaException.class);
+    }
+
+    @Test
+    void reconstruirRechazaUnHistorialVacio() {
+        assertThatThrownBy(() -> Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López", List.of()))
+                .isInstanceOf(GuiaInvalidaException.class)
+                .hasMessageContaining("PEC2610190049")
+                .hasMessageContaining("no tiene eventos");
+    }
+
+    @Test
+    void reconstruirExigeEmpezarRegistradaEnElOrigen() {
+        assertThatThrownBy(() -> Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López",
+                        List.of(evento(EN_TRANSITO, CDMX, 0))))
+                .isInstanceOf(GuiaInvalidaException.class)
+                .hasMessageContaining("debe empezar en 'Registrada'");
+        assertThatThrownBy(() -> Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López",
+                        List.of(evento(REGISTRADA, PUE, 0))))
+                .isInstanceOf(GuiaInvalidaException.class)
+                .hasMessageContaining("sucursal de origen (CDMX)");
+    }
+
+    @Test
+    void reconstruirDetectaUnSaltoDeEstadoAlterado() {
+        List<EventoDeRastreo> alterado = List.of(evento(REGISTRADA, CDMX, 0), evento(ENTREGADA, MTY, 3));
+
+        assertThatThrownBy(() -> Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López", alterado))
+                .isInstanceOf(GuiaInvalidaException.class)
+                .hasMessageContaining("historial guardado de la guía PEC2610190049 no es válido")
+                .hasMessageContaining("no puede pasar a 'Entregada'");
+    }
+
+    @Test
+    void reconstruirDetectaFechasDesordenadas() {
+        List<EventoDeRastreo> desordenado = List.of(
+                evento(REGISTRADA, CDMX, 5), evento(EN_TRANSITO, CDMX, 2));
+
+        assertThatThrownBy(() -> Guia.reconstruir(NUMERO, CDMX_A_MTY, "Ana López", desordenado))
+                .isInstanceOf(GuiaInvalidaException.class)
+                .hasMessageContaining("no puede ser anterior");
     }
 }
