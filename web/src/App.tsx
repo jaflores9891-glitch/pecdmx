@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Cotizador from './Cotizador'
 import Rastreo from './Rastreo'
 
 type Pestana = 'rastrear' | 'cotizar'
@@ -44,7 +45,7 @@ export default function App() {
           {pestana === 'rastrear' ? (
             <Rastreo />
           ) : (
-            <p>Calcula cuánto cuesta enviar un paquete entre nuestras sucursales.</p>
+            <Cotizador />
           )}
         </section>
       </main>

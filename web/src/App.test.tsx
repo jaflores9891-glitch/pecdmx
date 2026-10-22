@@ -1,7 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
+
+// La pestaña Cotizar pide las sucursales al abrirse: un backend falso evita que el test dependa de internet.
+beforeEach(() => {
+  vi.stubGlobal('fetch', vi.fn(() => Promise.resolve(new Response('[]', { status: 200 }))))
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('App', () => {
   it('muestra el nombre de la empresa', () => {

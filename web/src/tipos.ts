@@ -21,6 +21,21 @@ export interface EventoDeRastreo {
   nota: string
 }
 
+/** Respuesta de POST /api/cotizaciones. Montos en pesos mexicanos, antes y después de IVA. */
+export interface Cotizacion {
+  origen: Sucursal
+  destino: Sucursal
+  zona: number
+  descripcionZona: string
+  pesoRealKg: number
+  pesoVolumetricoKg: number
+  pesoCobrableKg: number
+  subtotal: number
+  iva: number
+  total: number
+  moneda: string
+}
+
 /** Respuesta de GET /api/guias/{numero}. A propósito no trae el nombre del destinatario ni montos. */
 export interface Rastreo {
   numero: string
