@@ -24,6 +24,8 @@ Cliente → Web (React, Vercel) → Negocio (Java, Render) ↔ PostgreSQL + pgve
 | [`docs/`](docs/) | Políticas para el RAG y diagramas | Markdown |
 
 ## API del negocio
+**En vivo:** https://pecdmx.onrender.com/api/sucursales. Si nadie la usó en 15 minutos, la primera petición tarda en despertarla.
+
 | Petición | Quién | Para qué |
 |---|---|---|
 | `GET /api/sucursales` | Cualquiera | Lista de sucursales |
