@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Rastreo from './Rastreo'
 
 type Pestana = 'rastrear' | 'cotizar'
 
@@ -41,7 +42,7 @@ export default function App() {
 
         <section role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`pestana-${pestana}`} className="panel">
           {pestana === 'rastrear' ? (
-            <p>Escribe tu número de guía para ver dónde va tu paquete.</p>
+            <Rastreo />
           ) : (
             <p>Calcula cuánto cuesta enviar un paquete entre nuestras sucursales.</p>
           )}
