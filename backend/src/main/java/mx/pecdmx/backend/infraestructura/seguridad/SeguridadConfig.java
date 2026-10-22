@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /** Las reglas del "guardia": qué es público, qué pide gafete y cómo se firman y revisan los gafetes. */
 @Configuration
@@ -27,10 +28,12 @@ import org.springframework.security.web.SecurityFilterChain;
 class SeguridadConfig {
 
     @Bean
-    SecurityFilterChain reglas(HttpSecurity http) throws Exception {
+    SecurityFilterChain reglas(HttpSecurity http, CorsConfigurationSource reglasCors) throws Exception {
         http
                 // Sin cookies de sesión: cada petición trae su gafete. Por eso no hace falta la protección CSRF.
                 .csrf(csrf -> csrf.disable())
+                // Las reglas de CorsConfig se pasan explícitamente (si no, Spring las busca por un nombre fijo).
+                .cors(cors -> cors.configurationSource(reglasCors))
                 .sessionManagement(sesion -> sesion.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(peticiones -> peticiones
                         // Lo público: lo que usan los clientes sin cuenta.

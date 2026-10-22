@@ -35,4 +35,5 @@ en producción, en el panel del servicio.
 | `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD` | Usuario y contraseña de la base de datos. |
 | `SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE` | Máximo de conexiones abiertas a la vez (en producción, `3`). |
 | `PECDMX_JWT_SECRETO` | Llave para firmar los gafetes. Mínimo 32 caracteres; sin ella el servicio no arranca. |
+| `PECDMX_CORS_ORIGENES` | Páginas web que pueden usar la API desde el navegador, separadas por comas (ej. `https://pecdmx.vercel.app`). Sin ella, solo `http://localhost:5173`. |
 | `PECDMX_GERENTE_CORREO`, `PECDMX_GERENTE_NOMBRE`, `PECDMX_GERENTE_CONTRASENA` | Primer gerente. Se crea al arrancar solo si no hay usuarios. |
