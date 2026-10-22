@@ -72,14 +72,45 @@ jobs:
       - name: Construir la imagen
         run: docker build -t pecdmx-backend backend/
 
-  # Aquí se agregarán los jobs de tests: web (Etapa 3) y chatbot (Etapa 4).
+  # La página web: tests, linter y que se pueda construir la versión final.
+  web:
+    name: Web (React)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v5
+
+      - name: Instalar Node.js 24
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # "npm ci" instala exactamente las versiones de package-lock.json (más estricto que "npm install").
+      - name: Instalar librerías
+        run: npm ci --no-fund --no-audit
+
+      - name: Tests
+        run: npm test
+
+      - name: Linter
+        run: npm run lint
+
+      - name: Construir la página
+        run: npm run build
+
+  # Aquí se agregará el job de tests del chatbot (Etapa 4).
 
   # "Semáforo final": GitHub exige solo este check para aceptar cambios en main.
   # Cada job nuevo se agrega a la lista "needs" y así no hay que tocar la regla de GitHub.
   ci-ok:
     name: CI OK
     runs-on: ubuntu-latest
-    needs: [estructura, backend, imagen-backend]
+    needs: [estructura, backend, imagen-backend, web]
     if: always()
     steps:
       - name: Revisar que todos los jobs pasaron
