@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Una caja de paquetería con los colores de PECDMX -->
+  <path d="M16 2 29 8v16l-13 6L3 24V8z" fill="#c2410c"/>
+  <path d="M16 2 29 8l-13 6L3 8z" fill="#ea580c"/>
+  <path d="M16 14v16" stroke="#9a3412" stroke-width="1.5"/>
+  <path d="m9.5 5 13 6v5" stroke="#fde68a" stroke-width="2.5" fill="none"/>
+</svg>
