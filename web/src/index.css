@@ -105,3 +105,143 @@ a {
   color: var(--color-texto-suave);
   text-align: center;
 }
+
+/* --- Formularios --- */
+label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 10px 12px;
+  font: inherit;
+  color: var(--color-texto);
+  background: #fff;
+  border: 1px solid var(--color-borde);
+  border-radius: 8px;
+}
+
+input:focus,
+select:focus {
+  outline: 2px solid var(--color-marca);
+  outline-offset: 1px;
+}
+
+.formulario-en-linea .fila {
+  display: flex;
+  gap: 8px;
+}
+
+.boton {
+  padding: 10px 20px;
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  white-space: nowrap;
+  cursor: pointer;
+  background: var(--color-marca);
+  border: none;
+  border-radius: 8px;
+}
+
+.boton:hover:not(:disabled) {
+  background: var(--color-marca-oscuro);
+}
+
+.boton:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.alerta {
+  margin: 16px 0 0;
+  padding: 12px 14px;
+  color: #82071e;
+  background: #ffebe9;
+  border: 1px solid #ffcecb;
+  border-radius: 8px;
+}
+
+/* --- Resultado del rastreo --- */
+.resultado {
+  margin-top: 20px;
+}
+
+.estado-actual {
+  padding: 16px;
+  background: #fff7ed;
+  border-left: 4px solid var(--color-marca);
+  border-radius: 8px;
+}
+
+.estado-actual h2 {
+  margin: 0 0 4px;
+  color: var(--color-marca-oscuro);
+}
+
+.estado-actual p {
+  margin: 0;
+}
+
+.etiqueta {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ruta {
+  margin-top: 8px !important;
+  font-weight: 600;
+}
+
+/* Una línea vertical con un punto por cada evento. */
+.linea-de-tiempo {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.linea-de-tiempo li {
+  position: relative;
+  padding: 0 0 16px 24px;
+  border-left: 2px solid var(--color-borde);
+}
+
+.linea-de-tiempo li:last-child {
+  border-left-color: transparent;
+}
+
+.linea-de-tiempo li::before {
+  position: absolute;
+  top: 4px;
+  left: -7px;
+  width: 12px;
+  height: 12px;
+  content: '';
+  background: var(--color-borde);
+  border-radius: 50%;
+}
+
+/* El evento más reciente (el primero) se marca con el color de la marca. */
+.linea-de-tiempo li:first-child::before {
+  background: var(--color-marca);
+}
+
+.linea-de-tiempo p {
+  margin: 0;
+}
+
+.evento-fecha,
+.evento-nota {
+  font-size: 0.9rem;
+  color: var(--color-texto-suave);
+}
+
+.evento-nota {
+  font-style: italic;
+}
