@@ -1,0 +1,107 @@
+/* Colores y medidas en un solo lugar: cambiar el diseño es cambiar estas variables. */
+:root {
+  --color-marca: #c2410c;
+  --color-marca-oscuro: #9a3412;
+  --color-fondo: #f8f7f4;
+  --color-tarjeta: #ffffff;
+  --color-texto: #1f2328;
+  --color-texto-suave: #57606a;
+  --color-borde: #d8dee4;
+  --radio: 10px;
+  --sombra: 0 1px 3px rgb(0 0 0 / 8%);
+
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  color: var(--color-texto);
+  background: var(--color-fondo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-fondo);
+}
+
+a {
+  color: var(--color-marca-oscuro);
+}
+
+.pagina {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.encabezado {
+  padding: 24px 16px;
+  color: #fff;
+  text-align: center;
+  background: var(--color-marca);
+}
+
+.encabezado h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  letter-spacing: 0.02em;
+}
+
+.encabezado p {
+  margin: 4px 0 0;
+  opacity: 0.9;
+}
+
+/* Ancho máximo cómodo de leer; en el celular ocupa toda la pantalla con 16px de margen. */
+.contenido {
+  flex: 1;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.pestanas {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid var(--color-borde);
+}
+
+.pestana {
+  padding: 10px 20px;
+  font: inherit;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+}
+
+.pestana[aria-selected='true'] {
+  color: var(--color-marca-oscuro);
+  border-bottom-color: var(--color-marca);
+}
+
+.pestana:focus-visible {
+  outline: 2px solid var(--color-marca);
+  outline-offset: 2px;
+}
+
+.panel {
+  margin-top: 16px;
+  padding: 20px;
+  background: var(--color-tarjeta);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  box-shadow: var(--sombra);
+}
+
+.pie {
+  padding: 16px;
+  font-size: 0.9rem;
+  color: var(--color-texto-suave);
+  text-align: center;
+}
