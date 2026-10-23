@@ -106,6 +106,50 @@ a {
   text-align: center;
 }
 
+/* --- Aviso de servidor despertando o sin conexión --- */
+.aviso {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+}
+
+.aviso p {
+  margin: 0;
+}
+
+.aviso-despertando {
+  background: #fff8c5;
+  border: 1px solid #eac54f;
+}
+
+.aviso-error {
+  color: #82071e;
+  background: #ffebe9;
+  border: 1px solid #ffcecb;
+}
+
+.girando {
+  display: inline-block;
+  font-size: 1.25rem;
+  animation: girar 2s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Quien pide menos movimiento en su sistema no ve la animación. */
+@media (prefers-reduced-motion: reduce) {
+  .girando {
+    animation: none;
+  }
+}
+
 /* --- Formularios --- */
 label {
   display: block;
