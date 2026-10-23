@@ -1,0 +1,59 @@
+"""El "enchufe" único para hablar con un LLM: Groq como principal y Gemini como respaldo.
+
+El resto del chatbot nunca habla con Groq o con Gemini directamente: usa lo que regresa crear_llm().
+Ambos son modelos de chat de LangChain, así que se usan igual (esa es la interfaz común).
+"""
+
+from langchain_core.language_models import BaseChatModel
+from langchain_core.runnables import Runnable
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
+
+from pecdmx_chatbot.configuracion import Configuracion
+
+
+class SinProveedoresError(RuntimeError):
+    """No hay ninguna llave de LLM configurada: el chatbot no puede responder."""
+
+    def __init__(self) -> None:
+        super().__init__("No hay ningún LLM configurado. Agrega GROQ_API_KEY o GEMINI_API_KEY al .env.")
+
+
+def proveedores_configurados(config: Configuracion) -> list[BaseChatModel]:
+    """Los modelos disponibles, en orden de preferencia: primero Groq, luego Gemini."""
+    proveedores: list[BaseChatModel] = []
+    if config.groq_api_key:
+        proveedores.append(
+            ChatGroq(
+                model=config.groq_modelo,
+                api_key=config.groq_api_key,
+                temperature=config.llm_temperatura,
+                timeout=config.llm_espera_segundos,
+                # Un solo reintento: si falla, es mejor pasar rápido al respaldo que hacer esperar al cliente.
+                max_retries=1,
+            )
+        )
+    if config.gemini_api_key:
+        proveedores.append(
+            ChatGoogleGenerativeAI(
+                model=config.gemini_modelo,
+                google_api_key=config.gemini_api_key,
+                temperature=config.llm_temperatura,
+                timeout=config.llm_espera_segundos,
+                max_retries=1,
+            )
+        )
+    return proveedores
+
+
+def encadenar_con_respaldo(proveedores: list[BaseChatModel]) -> Runnable:
+    """Usa el primero; si falla (límite alcanzado, caída, error), intenta con el siguiente, en orden."""
+    if not proveedores:
+        raise SinProveedoresError()
+    principal, *respaldos = proveedores
+    return principal.with_fallbacks(respaldos) if respaldos else principal
+
+
+def crear_llm(config: Configuracion) -> Runnable:
+    """El LLM listo para usar, con respaldo automático si hay más de un proveedor."""
+    return encadenar_con_respaldo(proveedores_configurados(config))
