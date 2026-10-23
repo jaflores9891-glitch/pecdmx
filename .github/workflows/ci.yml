@@ -181,6 +181,18 @@ jobs:
       - name: Instalar Python 3.12 y las librerías
         run: uv sync --locked
 
+      # El modelo de embeddings (135 MB) se guarda en caché: solo se descarga de nuevo si cambia
+      # el script de descarga (que tiene la versión y las huellas).
+      - name: Recuperar el modelo de embeddings de la caché
+        uses: actions/cache@v4
+        with:
+          path: chatbot/modelos
+          key: modelo-e5-${{ hashFiles('chatbot/scripts/descargar_modelo.py') }}
+
+      # Si vino de la caché, el script solo comprueba las huellas y no descarga nada.
+      - name: Descargar el modelo y verificar sus huellas
+        run: uv run python scripts/descargar_modelo.py
+
       - name: Tests
         run: uv run pytest
 
