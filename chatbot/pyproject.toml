@@ -1,0 +1,40 @@
+[project]
+name = "pecdmx-chatbot"
+version = "0.1.0"
+description = "Asistente de servicio al cliente de PECDMX: rastrea, cotiza, responde dudas con RAG y levanta quejas."
+authors = [
+    { name = "Jesus-Flores", email = "jaflores9891@gmail.com" }
+]
+# La misma versión que la imagen de Docker y la CI.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.161.1",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.19,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+    "ruff>=0.17.2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/W: estilo · F: errores comunes · I: orden de imports · B: errores sutiles · UP: Python moderno · S: seguridad
+select = ["E", "W", "F", "I", "B", "UP", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# En los tests, "assert" es justo lo que se usa.
+"tests/**" = ["S101"]
