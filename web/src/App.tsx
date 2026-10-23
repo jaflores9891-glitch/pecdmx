@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AvisoDeDespertar from './AvisoDeDespertar'
 import Cotizador from './Cotizador'
 import Rastreo from './Rastreo'
 
@@ -24,6 +25,8 @@ export default function App() {
       </header>
 
       <main className="contenido">
+        <AvisoDeDespertar />
+
         <div className="pestanas" role="tablist" aria-label="Servicios">
           {PESTANAS.map(({ id, titulo }) => (
             <button
