@@ -49,7 +49,8 @@ def descargar(remoto: str, destino: Path, huella_esperada: str) -> None:
 
     url = f"https://huggingface.co/{REPOSITORIO}/resolve/{VERSION}/{remoto}"
     print(f"↓ Descargando {remoto} ...")
-    # Se descarga a un archivo temporal: si algo falla a la mitad, no queda un archivo a medias con el nombre final.
+    # Se descarga a un archivo temporal: si algo falla a la mitad,
+    # no queda un archivo a medias con el nombre final.
     with tempfile.NamedTemporaryFile(dir=destino.parent, delete=False) as temporal:
         ruta_temporal = Path(temporal.name)
         with urllib.request.urlopen(url, timeout=120) as respuesta:  # noqa: S310 - URL fija de Hugging Face
