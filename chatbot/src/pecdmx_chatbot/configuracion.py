@@ -22,7 +22,9 @@ class Configuracion(BaseSettings):
     groq_modelo: str = "openai/gpt-oss-120b"
 
     gemini_api_key: SecretStr | None = None
-    gemini_modelo: str = "gemini-3.8-flash"
+    # Versión fija (no "-latest", que Google cambia sin avisar).
+    # gemini-3.8-flash daba errores 504 (sin respuesta a tiempo) en el plan gratis.
+    gemini_modelo: str = "gemini-3.5-flash"
 
     # Qué tan "creativo" es el modelo: bajo, porque un asistente de servicio debe ser preciso.
     llm_temperatura: float = 0.2

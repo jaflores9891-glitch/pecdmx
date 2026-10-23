@@ -24,14 +24,15 @@ def main() -> None:
         nombre = type(modelo).__name__
         inicio = time.perf_counter()
         try:
-            respuesta = modelo.invoke(PREGUNTA).content
+            # .text da el texto limpio aunque el modelo responda con bloques (como Gemini).
+            respuesta = modelo.invoke(PREGUNTA).text
             print(f"\n✅ {nombre} ({time.perf_counter() - inicio:.1f} s): {respuesta}")
         # En una prueba manual se quiere ver cualquier error, del tipo que sea.
         except Exception as error:
             print(f"\n❌ {nombre}: {type(error).__name__}: {error}")
 
     print("\n== Con respaldo (lo que usará el chatbot)")
-    print(crear_llm(config).invoke(PREGUNTA).content)
+    print(crear_llm(config).invoke(PREGUNTA).text)
 
 
 if __name__ == "__main__":

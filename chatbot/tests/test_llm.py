@@ -2,6 +2,7 @@
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeListChatModel
+from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableWithFallbacks
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
@@ -40,6 +41,17 @@ def test_si_todos_fallan_se_avisa_el_error():
 
     with pytest.raises(RuntimeError, match="429"):
         llm.invoke("hola")
+
+
+def test_text_da_el_texto_limpio_aunque_el_modelo_responda_con_bloques():
+    # Así responde Gemini: una lista de bloques, no texto simple. El chatbot siempre debe leer .text.
+    respuesta_de_gemini = AIMessage(
+        content=[{"type": "text", "text": "Una paquetería entrega paquetes.", "extras": {"signature": "abc"}}]
+    )
+    respuesta_de_groq = AIMessage(content="Una paquetería entrega paquetes.")
+
+    assert respuesta_de_gemini.text == "Una paquetería entrega paquetes."
+    assert respuesta_de_groq.text == "Una paquetería entrega paquetes."
 
 
 def test_con_un_solo_proveedor_no_hay_respaldo():
