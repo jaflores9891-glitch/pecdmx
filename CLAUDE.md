@@ -62,11 +62,21 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - Mensajes de commit en estilo Conventional Commits (`feat:`, `fix:`, `docs:`, `ci:`, `test:`, `chore:`).
 - La CI vive en `.github/workflows/ci.yml`. Cada job nuevo se agrega a `needs` del job `ci-ok`.
 
+## Publicado (Etapa 3)
+- Web: https://pecdmx.vercel.app (Vercel Hobby; raíz `web`; variable `VITE_API_URL`; publica solo si cambia `web/`).
+- Backend: https://pecdmx.onrender.com (Render Free, Docker, región Ohio; Auto-Deploy "After CI Checks Pass";
+  Build Filter `backend/**`). Variables en el panel de Render: `SPRING_DATASOURCE_*`, `PECDMX_JWT_SECRETO`,
+  `PECDMX_GERENTE_*` y `PECDMX_CORS_ORIGENES`.
+- Base de datos: Neon, PostgreSQL 17, región US East 2 (Ohio), sin "connection pooling".
+- La URL de la base de datos va sin usuario ni contraseña y empieza con `jdbc:`.
+  Si una captura llega a mostrar una contraseña, hay que rotarla de inmediato.
+- La CI corre por carpeta (job `cambios`); `CI OK` acepta jobs saltados.
+
 ## Etapas
 - [x] 0. Preparación del entorno
 - [x] 1. Estructura del proyecto, repo en GitHub y CI
 - [x] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
-- [ ] 3. Publicación: Render + Neon, web en Vercel, CD
+- [x] 3. Publicación: Render + Neon, web en Vercel, CD
 - [ ] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
 - [ ] 5. Pulido para reclutadores
 - [ ] 6. (Opcional) Leer la etiqueta del paquete con foto
