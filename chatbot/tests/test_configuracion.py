@@ -20,7 +20,7 @@ def test_sin_variables_usa_los_modelos_por_defecto(monkeypatch):
 
     assert config.groq_api_key is None
     assert config.groq_modelo == "openai/gpt-oss-120b"
-    assert config.gemini_modelo == "gemini-3.8-flash"
+    assert config.gemini_modelo == "gemini-3.5-flash"
 
 
 def test_una_variable_vacia_usa_el_valor_por_defecto(monkeypatch):
