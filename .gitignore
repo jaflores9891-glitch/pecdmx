@@ -26,6 +26,7 @@ htmlcov/
 # --- Modelos de IA descargados (se bajan de Hugging Face, no se guardan aquí) ---
 *.onnx
 models/
+chatbot/modelos/
 
 # --- Node / React (web) ---
 node_modules/
