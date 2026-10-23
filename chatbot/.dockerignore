@@ -1,0 +1,9 @@
+# Lo que NO entra a la caja de Docker: archivos generados, tests y, sobre todo, secretos.
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+tests/
+.env
+.env.*
