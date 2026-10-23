@@ -1,6 +1,7 @@
 """Configuración del chatbot, leída de variables de entorno o del archivo .env (nunca del código)."""
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -30,6 +31,10 @@ class Configuracion(BaseSettings):
     llm_temperatura: float = 0.2
     # Cuánto esperar a un proveedor antes de darlo por caído y pasar al respaldo.
     llm_espera_segundos: float = 30.0
+
+    # Dónde está el modelo de embeddings (lo baja scripts/descargar_modelo.py).
+    # Por defecto, chatbot/modelos/; en Docker se indica con la variable MODELO_CARPETA.
+    modelo_carpeta: Path = Path(__file__).resolve().parents[2] / "modelos"
 
 
 @lru_cache
