@@ -12,7 +12,51 @@ permissions:
   contents: read
 
 jobs:
+  # Revisa qué carpetas cambiaron, para correr solo las revisiones que hacen falta.
+  # Si cambia la CI misma (.github/), o no hay con qué comparar, se revisa todo por si acaso.
+  cambios:
+    name: Detectar cambios
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.revisar.outputs.backend }}
+      web: ${{ steps.revisar.outputs.web }}
+    steps:
+      - name: Descargar el código con su historial
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Comparar contra la versión anterior
+        id: revisar
+        env:
+          # En un PR se compara contra main; en un push a main, contra el commit anterior.
+          BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [ -z "$BASE" ] || ! git cat-file -e "$BASE^{commit}" 2>/dev/null; then
+            echo "No hay con qué comparar: se revisa todo."
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+            echo "web=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          archivos=$(git diff --name-only "$BASE" HEAD)
+          echo "Archivos que cambiaron:"
+          echo "$archivos"
+
+          todo=false
+          if echo "$archivos" | grep -q '^\.github/'; then todo=true; fi
+
+          backend=$todo
+          web=$todo
+          if echo "$archivos" | grep -q '^backend/'; then backend=true; fi
+          if echo "$archivos" | grep -q '^web/'; then web=true; fi
+
+          echo "backend=$backend" >> "$GITHUB_OUTPUT"
+          echo "web=$web" >> "$GITHUB_OUTPUT"
+          echo "Revisar backend: $backend | Revisar web: $web"
+
   # Revisa que la estructura del proyecto esté sana y que no se haya subido ningún secreto.
+  # Siempre corre: es rápida y protege contra subir un .env por accidente.
   estructura:
     name: Estructura y secretos
     runs-on: ubuntu-latest
@@ -43,6 +87,8 @@ jobs:
   # Compila el negocio en Java y corre sus tests (Testcontainers usa el Docker de GitHub).
   backend:
     name: Backend (Java)
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -64,6 +110,8 @@ jobs:
   # Construye la misma imagen que usará Render. Si un cambio rompe el Dockerfile, se sabe aquí y no al publicar.
   imagen-backend:
     name: Imagen de Docker (backend)
+    needs: cambios
+    if: needs.cambios.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Descargar el código
@@ -75,6 +123,8 @@ jobs:
   # La página web: tests, linter y que se pueda construir la versión final.
   web:
     name: Web (React)
+    needs: cambios
+    if: needs.cambios.outputs.web == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -107,16 +157,18 @@ jobs:
 
   # "Semáforo final": GitHub exige solo este check para aceptar cambios en main.
   # Cada job nuevo se agrega a la lista "needs" y así no hay que tocar la regla de GitHub.
+  # Un job "saltado" (porque su carpeta no cambió) cuenta como bien; uno que falló o se canceló, no.
   ci-ok:
     name: CI OK
     runs-on: ubuntu-latest
-    needs: [estructura, backend, imagen-backend, web]
+    needs: [cambios, estructura, backend, imagen-backend, web]
     if: always()
     steps:
       - name: Revisar que todos los jobs pasaron
         run: |
+          echo "Resultados: ${{ join(needs.*.result, ', ') }}"
           if [ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" = "true" ]; then
             echo "::error::Al menos una revisión falló."
             exit 1
           fi
-          echo "Todas las revisiones pasaron."
+          echo "Todas las revisiones necesarias pasaron."
