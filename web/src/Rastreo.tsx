@@ -3,6 +3,14 @@ import { ErrorDeApi, pedir } from './api'
 import { fechaHoraLegible } from './fechas'
 import type { Rastreo as DatosDeRastreo } from './tipos'
 
+/** Guías de demostración que existen en la base (migración V3 del backend), para quien visita la página. */
+const GUIAS_DE_EJEMPLO = [
+  { numero: 'PEC9000000027', estado: 'en tránsito' },
+  { numero: 'PEC9000000035', estado: 'lista para recoger' },
+  { numero: 'PEC9000000050', estado: 'con incidencia' },
+  { numero: 'PEC9000000019', estado: 'entregada' },
+]
+
 /** Pestaña "Rastrear": el cliente escribe su número de guía y ve el estado y el historial de su paquete. */
 export default function Rastreo() {
   const [numero, setNumero] = useState('')
@@ -12,10 +20,8 @@ export default function Rastreo() {
 
   const numeroLimpio = numero.trim()
 
-  async function buscar(evento: FormEvent<HTMLFormElement>) {
-    // Sin esto, el navegador recargaría la página al enviar el formulario.
-    evento.preventDefault()
-    if (!numeroLimpio || buscando) {
+  async function consultar(guia: string) {
+    if (!guia || buscando) {
       return
     }
     setBuscando(true)
@@ -23,12 +29,23 @@ export default function Rastreo() {
     setRastreo(null)
     try {
       // encodeURIComponent protege la URL si el cliente escribe espacios o símbolos.
-      setRastreo(await pedir<DatosDeRastreo>(`/api/guias/${encodeURIComponent(numeroLimpio)}`))
+      setRastreo(await pedir<DatosDeRastreo>(`/api/guias/${encodeURIComponent(guia)}`))
     } catch (e) {
       setError(e instanceof ErrorDeApi ? e.message : 'Ocurrió un error inesperado. Intenta de nuevo.')
     } finally {
       setBuscando(false)
     }
+  }
+
+  function buscar(evento: FormEvent<HTMLFormElement>) {
+    // Sin esto, el navegador recargaría la página al enviar el formulario.
+    evento.preventDefault()
+    void consultar(numeroLimpio)
+  }
+
+  function probarEjemplo(guia: string) {
+    setNumero(guia)
+    void consultar(guia)
   }
 
   return (
@@ -42,7 +59,7 @@ export default function Rastreo() {
             id="numero-de-guia"
             value={numero}
             onChange={(e) => setNumero(e.target.value)}
-            placeholder="PEC2610190049"
+            placeholder="PEC9000000027"
             autoComplete="off"
             spellCheck={false}
           />
@@ -51,6 +68,21 @@ export default function Rastreo() {
           </button>
         </div>
       </form>
+
+      <p className="ejemplos">
+        ¿No tienes una guía? Prueba con:{' '}
+        {GUIAS_DE_EJEMPLO.map(({ numero: guia, estado }) => (
+          <button
+            key={guia}
+            type="button"
+            className="ejemplo"
+            disabled={buscando}
+            onClick={() => probarEjemplo(guia)}
+          >
+            {estado}
+          </button>
+        ))}
+      </p>
 
       {/* role="alert" hace que un lector de pantalla lea el error en voz alta en cuanto aparece. */}
       {error && (
