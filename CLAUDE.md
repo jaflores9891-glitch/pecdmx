@@ -77,6 +77,11 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - La URL de la base de datos va sin usuario ni contraseña y empieza con `jdbc:`.
   Si una captura llega a mostrar una contraseña, hay que rotarla de inmediato.
 - La CI corre por carpeta (job `cambios`); `CI OK` acepta jobs saltados.
+- Ojo con los Build Filters de Render: si un PR une varios commits y el ÚLTIMO no toca `backend/` (o `chatbot/`),
+  Render puede saltarse el deploy. Después de unir un PR así, confirmar en producción (o en Events) y,
+  si no se publicó, pedir a Jesús un **Manual Deploy → Deploy latest commit**.
+- Guías de demostración (migración V3): `PEC9000000019` (entregada), `…027` (en tránsito), `…035` (en sucursal
+  de destino), `…043` (registrada), `…050` (incidencia) y `…068` (cancelada).
 
 ## Etapas
 - [x] 0. Preparación del entorno
@@ -84,5 +89,5 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - [x] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
 - [x] 3. Publicación: Render + Neon, web en Vercel, CD
 - [x] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
-- [ ] 5. Pulido para reclutadores
+- [x] 5. Pulido para reclutadores (README con diagramas, guías de demostración, `docs/guion-video.md`, `docs/entrevista.md`)
 - [ ] 6. (Opcional) Leer la etiqueta del paquete con foto
