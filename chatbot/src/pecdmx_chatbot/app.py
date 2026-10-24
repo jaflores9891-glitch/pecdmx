@@ -5,7 +5,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Annotated, Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
@@ -14,7 +14,9 @@ from pecdmx_chatbot.agente import Asistente, Mensaje
 from pecdmx_chatbot.casos import Caso, CasoNoEncontradoError, RepositorioDeCasos
 from pecdmx_chatbot.configuracion import Configuracion, configuracion
 from pecdmx_chatbot.defensas import DetectorDeInyeccion, LimiteDeMensajes
+from pecdmx_chatbot.etiquetas import EtiquetaIlegibleError, LectorDeEtiquetas, LectoresNoDisponiblesError
 from pecdmx_chatbot.gafetes import GafeteInvalidoError, Operador, leer_gafete
+from pecdmx_chatbot.llm import lectores_de_imagenes
 
 registro = logging.getLogger("pecdmx_chatbot")
 
@@ -65,6 +67,8 @@ async def ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
     app.state.asistente = armar_asistente(config, app.state.casos) if app.state.casos else None
     secreto = config.pecdmx_jwt_secreto
     app.state.jwt_secreto = secreto.get_secret_value() if secreto else None
+    lectores = lectores_de_imagenes(config)
+    app.state.lector_de_etiquetas = LectorDeEtiquetas(lectores) if lectores else None
     yield
 
 
@@ -154,6 +158,49 @@ def chatear(
             503, "El asistente no pudo responder. Intenta de nuevo en unos minutos."
         ) from error
     return RespuestaChatJson(respuesta=respuesta.texto, fuentes=respuesta.fuentes)
+
+
+# --- Leer la etiqueta de un paquete con una foto ---
+
+TIPOS_DE_IMAGEN = {"image/jpeg", "image/png", "image/webp"}
+TAMANO_MAXIMO = 5 * 1024 * 1024  # 5 MB: la página reduce las fotos del celular antes de mandarlas
+
+
+class LecturaJson(BaseModel):
+    numero: str
+
+
+def obtener_lector(request: Request) -> LectorDeEtiquetas:
+    lector = getattr(request.app.state, "lector_de_etiquetas", None)
+    if lector is None:
+        raise HTTPException(503, "La lectura de etiquetas no está disponible en este momento.")
+    return lector
+
+
+@app.post("/api/etiquetas", dependencies=[Depends(revisar_limites)])
+def leer_etiqueta(
+    foto: UploadFile, lector: Annotated[LectorDeEtiquetas, Depends(obtener_lector)]
+) -> LecturaJson:
+    """Recibe la foto de una etiqueta y regresa su número de guía. La foto no se guarda en ningún lado."""
+    if foto.content_type not in TIPOS_DE_IMAGEN:
+        raise HTTPException(415, "Sube una foto en formato JPG, PNG o WebP.")
+    imagen = foto.file.read(TAMANO_MAXIMO + 1)
+    if len(imagen) > TAMANO_MAXIMO:
+        raise HTTPException(413, "La foto pesa más de 5 MB. Intenta con una más ligera.")
+    if not imagen:
+        raise HTTPException(422, "La foto está vacía.")
+    try:
+        lectura = lector.leer(imagen, foto.content_type)
+    except EtiquetaIlegibleError as error:
+        raise HTTPException(422, str(error)) from error
+    except LectoresNoDisponiblesError as error:
+        raise HTTPException(
+            503,
+            "La lectura de etiquetas está muy solicitada. Intenta en un minuto o escribe el número.",
+            {"Retry-After": "60"},
+        ) from error
+    registro.info("Etiqueta leída por %s.", lectura.lector)
+    return LecturaJson(numero=lectura.numero)
 
 
 # --- Casos (quejas y pasos a empleado): solo empleados y gerentes, con el gafete del backend ---

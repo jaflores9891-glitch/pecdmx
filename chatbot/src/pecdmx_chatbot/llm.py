@@ -66,6 +66,45 @@ def encadenar_con_respaldo(
     return principal.with_fallbacks(respaldos) if respaldos else principal
 
 
+def lectores_de_imagenes(config: Configuracion) -> list[tuple[str, BaseChatModel]]:
+    """Modelos con visión, en orden: Qwen en Groq (rápido, más margen gratis) y Gemini de segunda opinión.
+
+    Temperatura 0: para leer un número no se quiere creatividad.
+    """
+    lectores: list[tuple[str, BaseChatModel]] = []
+    if config.groq_api_key:
+        lectores.append(
+            (
+                "groq",
+                ChatGroq(
+                    model=config.groq_modelo_vision,
+                    api_key=config.groq_api_key,
+                    temperature=0,
+                    timeout=config.llm_espera_segundos,
+                    max_retries=0,
+                    # Leer un número no necesita "razonar" (era 10 veces más lento) y la respuesta es
+                    # corta: pedir poco deja cupo para más fotos dentro del límite por minuto de Groq.
+                    reasoning_effort="none",
+                    max_tokens=40,
+                ),
+            )
+        )
+    if config.gemini_api_key:
+        lectores.append(
+            (
+                "gemini",
+                ChatGoogleGenerativeAI(
+                    model=config.gemini_modelo_vision,
+                    google_api_key=config.gemini_api_key,
+                    temperature=0,
+                    timeout=config.llm_espera_segundos,
+                    max_retries=1,
+                ),
+            )
+        )
+    return lectores
+
+
 def crear_llm(config: Configuracion, herramientas: Sequence[BaseTool] = ()) -> Runnable:
     """El LLM listo para usar, con respaldo automático si hay más de un proveedor."""
     return encadenar_con_respaldo(proveedores_configurados(config), herramientas)

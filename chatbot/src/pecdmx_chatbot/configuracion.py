@@ -22,6 +22,12 @@ class Configuracion(BaseSettings):
     groq_api_key: SecretStr | None = None
     groq_modelo: str = "openai/gpt-oss-120b"
 
+    # Modelos con visión para leer etiquetas (el principal de texto no ve imágenes).
+    groq_modelo_vision: str = "qwen/qwen3.8-27b"
+    # Un modelo distinto al del chat: en el plan gratis el cupo es POR MODELO, y gemini-3.5-flash solo
+    # permite 20 peticiones al día; así las etiquetas no le gastan el cupo al respaldo del chat.
+    gemini_modelo_vision: str = "gemini-3.1-flash-lite"
+
     gemini_api_key: SecretStr | None = None
     # Versión fija (no "-latest", que Google cambia sin avisar).
     # gemini-3.8-flash daba errores 504 (sin respuesta a tiempo) en el plan gratis.
