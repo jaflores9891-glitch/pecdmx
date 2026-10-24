@@ -42,6 +42,7 @@ def test_para_rastrear_usa_la_herramienta_y_responde_con_su_resultado():
     respuesta = asistente.responder([Mensaje("cliente", "¿dónde está mi guía PEC0000000018?")])
 
     assert respuesta.texto == "Tu paquete va en camino a Monterrey."
+    assert respuesta.herramientas_usadas == ["rastrear_guia"]
     # En la segunda vuelta el LLM ya tiene el resultado real del backend.
     resultado = llm.recibido[1][-1]
     assert isinstance(resultado, ToolMessage)

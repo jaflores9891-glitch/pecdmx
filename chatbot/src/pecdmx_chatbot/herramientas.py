@@ -83,8 +83,13 @@ def crear_herramientas(
         Escribe la duda del cliente como una pregunta completa.
         """
         resultados = conocimiento.buscar(pregunta, cuantos=3)
+        if not resultados:
+            return "No se encontró nada en las políticas.", []
         texto = "\n\n".join(f"[Fuente: {r.fragmento.cita}]\n{r.fragmento.contenido}" for r in resultados)
-        return texto or "No se encontró nada en las políticas.", [r.fragmento.cita for r in resultados]
+        # El recordatorio va junto al resultado: el LLM lo ve justo antes de responder (en la evaluación,
+        # con la regla solo en las instrucciones, a veces olvidaba citar).
+        recordatorio = "\n\nAl responder, termina con la fuente que usaste, copiada tal cual: [Fuente: …]"
+        return texto + recordatorio, [r.fragmento.cita for r in resultados]
 
     @tool
     def levantar_queja(numero_guia: str, descripcion: str, contacto: str) -> str:
@@ -115,7 +120,8 @@ def crear_herramientas(
         )
         return (
             f"Queja registrada con folio {folio}. Tipo: {NOMBRES[clasificacion.categoria]}. "
-            f"Un empleado la revisará y responderá a {contacto} en un máximo de 3 días hábiles."
+            f"Un empleado la revisará y responderá a {contacto} en un máximo de 3 días hábiles. "
+            "Dale al cliente su folio."
         )
 
     @tool
@@ -137,7 +143,7 @@ def crear_herramientas(
         )
         return (
             f"Caso pasado a un empleado con folio {folio}. Contactará al cliente en {contacto} "
-            "dentro del horario de atención."
+            "dentro del horario de atención. Dale al cliente su folio."
         )
 
     return [rastrear_guia, cotizar_envio, buscar_politicas, levantar_queja, pasar_a_empleado]
