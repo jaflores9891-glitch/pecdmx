@@ -108,4 +108,16 @@ describe('Rastreo', () => {
     expect(screen.getByRole('button', { name: 'Buscar' })).toBeDisabled()
     expect(fetchFalso).not.toHaveBeenCalled()
   })
+
+  it('un clic en una guía de ejemplo la escribe y la busca', async () => {
+    const fetchFalso = simularBackend(200, RASTREO)
+    const persona = userEvent.setup()
+    render(<Rastreo />)
+
+    await persona.click(screen.getByRole('button', { name: 'en tránsito' }))
+
+    expect(await screen.findByRole('heading', { name: 'En tránsito' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Número de guía')).toHaveValue('PEC9000000027')
+    expect(fetchFalso.mock.calls[0][0]).toMatch(/\/api\/guias\/PEC9000000027$/)
+  })
 })
