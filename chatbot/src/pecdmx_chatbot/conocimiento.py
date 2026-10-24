@@ -3,6 +3,7 @@
 Usa su propio esquema ("chatbot"), separado de las tablas del backend de Java, en la misma base de Neon.
 """
 
+import re
 from dataclasses import dataclass
 
 import numpy as np
@@ -29,6 +30,19 @@ CREATE TABLE IF NOT EXISTS chatbot.ajustes (
     valor TEXT NOT NULL
 );
 """
+
+
+# El nombre de la empresa no ayuda a buscar (TODAS las políticas son de PECDMX) y sí estorba:
+# con "¿Se pueden enviar perfumes con PECDMX?" la búsqueda traía secciones equivocadas.
+_NOMBRE_DE_LA_EMPRESA = re.compile(
+    r"\b(con|de|en|a|por)?\s*(PECDMX|Paqueter[ií]a Express( Ciudad de M[ée]xico)?)\b", re.IGNORECASE
+)
+
+
+def limpiar_consulta(pregunta: str) -> str:
+    """Quita de la pregunta el nombre de la empresa antes de buscar."""
+    limpia = " ".join(_NOMBRE_DE_LA_EMPRESA.sub(" ", pregunta).split())
+    return limpia or pregunta
 
 
 @dataclass(frozen=True)
@@ -87,7 +101,7 @@ class BaseDeConocimiento:
 
     def buscar(self, pregunta: str, cuantos: int = 3) -> list[Resultado]:
         """Los fragmentos que más se parecen a la pregunta, del más al menos parecido."""
-        vector = self._incrustador.incrustar_consulta(pregunta).astype(np.float32)
+        vector = self._incrustador.incrustar_consulta(limpiar_consulta(pregunta)).astype(np.float32)
         with self._conectar() as conexion:
             filas = conexion.execute(
                 # "<=>" es la distancia coseno de pgvector: 0 = mismo significado. Similitud = 1 - distancia.

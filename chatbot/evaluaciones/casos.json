@@ -46,6 +46,12 @@
     "fuente": "Pilas, baterías y power banks"
   },
   {
+    "id": "politica-perfume",
+    "pregunta": "¿puedo mandar un perfume?",
+    "herramientas": ["buscar_politicas"],
+    "fuente": "Líquidos, perfumes y aerosoles"
+  },
+  {
     "id": "politica-horario",
     "pregunta": "¿a qué hora cierran los sábados?",
     "herramientas": ["buscar_politicas"],

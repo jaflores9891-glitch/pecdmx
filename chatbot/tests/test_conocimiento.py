@@ -6,7 +6,7 @@
 import psycopg
 import pytest
 
-from pecdmx_chatbot.conocimiento import BaseDeConocimiento
+from pecdmx_chatbot.conocimiento import BaseDeConocimiento, limpiar_consulta
 from pecdmx_chatbot.politicas import Fragmento, leer_politicas
 
 
@@ -37,6 +37,10 @@ def base(url_postgres, incrustador_compartido, configuracion_de_prueba) -> BaseD
         ("¿mi hermano puede recoger el paquete por mí?", "Cómo recoger un paquete"),
         ("mi paquete llegó roto, ¿me lo pagan?", "Paquete dañado o roto"),
         ("¿cómo empaco un vaso de vidrio?", "Objetos frágiles"),
+        # Así reformula el LLM las preguntas: con el nombre de la empresa (falló en producción).
+        ("¿Se pueden enviar perfumes con PECDMX?", "Líquidos, perfumes y aerosoles"),
+        ("¿PECDMX entrega a domicilio?", "Entrega en sucursal (no a domicilio)"),
+        ("¿Cuál es el horario de PECDMX los sábados?", "Horario de atención"),
     ],
 )
 def test_encuentra_la_politica_correcta_entre_los_primeros_resultados(base, pregunta, seccion_esperada):
@@ -78,3 +82,17 @@ def test_si_cambian_las_politicas_se_reindexa_todo(url_postgres, incrustador_com
         is True
     )
     assert base.cantidad_de_fragmentos() == 2
+
+
+@pytest.mark.parametrize(
+    ("pregunta", "limpia"),
+    [
+        ("¿Se pueden enviar perfumes con PECDMX?", "¿Se pueden enviar perfumes ?"),
+        ("¿pecdmx entrega a domicilio?", "¿ entrega a domicilio?"),
+        ("horarios de Paquetería Express Ciudad de México", "horarios"),
+        ("¿puedo mandar una pila?", "¿puedo mandar una pila?"),
+        ("PECDMX", "PECDMX"),  # si no queda nada, se busca tal cual
+    ],
+)
+def test_limpiar_consulta_quita_el_nombre_de_la_empresa(pregunta, limpia):
+    assert limpiar_consulta(pregunta) == limpia

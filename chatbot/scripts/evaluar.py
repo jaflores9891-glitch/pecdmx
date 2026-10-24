@@ -26,7 +26,7 @@ from pecdmx_chatbot.agente import Asistente, Mensaje, Respuesta
 from pecdmx_chatbot.casos import CasoNuevo
 from pecdmx_chatbot.clasificador import ClasificadorDeQuejas
 from pecdmx_chatbot.configuracion import configuracion
-from pecdmx_chatbot.conocimiento import Resultado
+from pecdmx_chatbot.conocimiento import Resultado, limpiar_consulta
 from pecdmx_chatbot.defensas import RESPUESTA_A_UN_ATAQUE, DetectorDeInyeccion
 from pecdmx_chatbot.embeddings import Incrustador
 from pecdmx_chatbot.herramientas import crear_herramientas
@@ -100,7 +100,7 @@ class PoliticasEnMemoria:
         self._vectores = incrustador.incrustar_documentos([f.texto_para_buscar for f in self._fragmentos])
 
     def buscar(self, pregunta: str, cuantos: int = 3) -> list[Resultado]:
-        similitudes = self._vectores @ self._incrustador.incrustar_consulta(pregunta)
+        similitudes = self._vectores @ self._incrustador.incrustar_consulta(limpiar_consulta(pregunta))
         mejores = np.argsort(-similitudes)[:cuantos]
         return [Resultado(self._fragmentos[i], float(similitudes[i])) for i in mejores]
 
