@@ -62,8 +62,14 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - Mensajes de commit en estilo Conventional Commits (`feat:`, `fix:`, `docs:`, `ci:`, `test:`, `chore:`).
 - La CI vive en `.github/workflows/ci.yml`. Cada job nuevo se agrega a `needs` del job `ci-ok`.
 
-## Publicado (Etapa 3)
-- Web: https://pecdmx.vercel.app (Vercel Hobby; raíz `web`; variable `VITE_API_URL`; publica solo si cambia `web/`).
+## Publicado (Etapas 3 y 4)
+- Web: https://pecdmx.vercel.app (Vercel Hobby; raíz `web`; variables `VITE_API_URL` y `VITE_CHATBOT_URL`
+  de tipo Config, no secretas; publica solo si cambia `web/`).
+- Chatbot: https://pecdmx-chatbot.onrender.com (Render Free, Docker, Ohio, raíz `chatbot`, health `/salud`,
+  Auto-Deploy "After CI Checks Pass", Build Filter `chatbot/**`). Variables: `GROQ_API_KEY`, `GEMINI_API_KEY`,
+  `DATABASE_URL` (formato `postgresql://`, sin `jdbc:`), `PECDMX_JWT_SECRETO` (la misma del backend),
+  `BACKEND_URL` y `PECDMX_CORS_ORIGENES`. Usa ~285 MB de RAM (pico ~320 MB) de 512.
+- La evaluación con el LLM real corre en la CI solo si existen los secretos de GitHub `GROQ_API_KEY`/`GEMINI_API_KEY`.
 - Backend: https://pecdmx.onrender.com (Render Free, Docker, región Ohio; Auto-Deploy "After CI Checks Pass";
   Build Filter `backend/**`). Variables en el panel de Render: `SPRING_DATASOURCE_*`, `PECDMX_JWT_SECRETO`,
   `PECDMX_GERENTE_*` y `PECDMX_CORS_ORIGENES`.
@@ -77,6 +83,6 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - [x] 1. Estructura del proyecto, repo en GitHub y CI
 - [x] 2. Negocio en Java: guías, estados, sucursales, tarifas, cotización, usuarios y roles
 - [x] 3. Publicación: Render + Neon, web en Vercel, CD
-- [ ] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
+- [x] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
 - [ ] 5. Pulido para reclutadores
 - [ ] 6. (Opcional) Leer la etiqueta del paquete con foto
