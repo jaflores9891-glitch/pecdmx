@@ -8,7 +8,10 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
 from langchain_core.outputs import ChatGeneration, ChatResult
 
+from pecdmx_chatbot.casos import CasoNuevo
+from pecdmx_chatbot.clasificador import Clasificacion
 from pecdmx_chatbot.conocimiento import Resultado
+from pecdmx_chatbot.herramientas import crear_herramientas
 from pecdmx_chatbot.negocio import ClienteDeNegocio
 from pecdmx_chatbot.politicas import Fragmento
 
@@ -92,6 +95,28 @@ def backend_que_sabe_todo() -> ClienteDeNegocio:
 def problema(estado: int, **campos) -> httpx.Response:
     return httpx.Response(
         estado, content=json.dumps(campos), headers={"Content-Type": "application/problem+json"}
+    )
+
+
+class CasosFalsos:
+    """Guarda los casos en una lista, en memoria."""
+
+    def __init__(self) -> None:
+        self.registrados: list[CasoNuevo] = []
+
+    def registrar(self, caso: CasoNuevo) -> str:
+        self.registrados.append(caso)
+        return f"{'Q' if caso.tipo == 'QUEJA' else 'A'}-{len(self.registrados):06d}"
+
+
+class ClasificadorFalso:
+    def clasificar(self, texto: str) -> Clasificacion:
+        return Clasificacion("DANO" if "roto" in texto else "OTRO", 0.9)
+
+
+def herramientas_falsas(backend: ClienteDeNegocio | None = None, casos: CasosFalsos | None = None) -> list:
+    return crear_herramientas(
+        backend or backend_que_sabe_todo(), ConocimientoFalso(), casos or CasosFalsos(), ClasificadorFalso()
     )
 
 

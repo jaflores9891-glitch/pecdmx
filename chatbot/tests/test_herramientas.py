@@ -1,13 +1,14 @@
 """Lo que cada herramienta le entrega al LLM: textos claros, en hora de México y sin lanzar errores."""
 
 import httpx
-from falsos import ConocimientoFalso, backend_falso, backend_que_sabe_todo, problema
+import pytest
+from falsos import CasosFalsos, backend_falso, herramientas_falsas, problema
 
-from pecdmx_chatbot.herramientas import SIN_SISTEMA, crear_herramientas
+from pecdmx_chatbot.herramientas import SIN_SISTEMA
 
 
-def herramientas(backend=None) -> dict:
-    return {h.name: h for h in crear_herramientas(backend or backend_que_sabe_todo(), ConocimientoFalso())}
+def herramientas(backend=None, casos=None) -> dict:
+    return {h.name: h for h in herramientas_falsas(backend, casos)}
 
 
 def test_el_rastreo_trae_estado_e_historial_en_hora_del_centro_de_mexico():
@@ -67,3 +68,62 @@ def test_buscar_politicas_da_cada_fragmento_con_su_fuente():
 
     assert "[Fuente: Artículos prohibidos › Pilas]\nNo se envían pilas sueltas." in mensaje.content
     assert mensaje.artifact == ["Artículos prohibidos › Pilas", "Embalaje › Frágiles"]
+
+
+def test_una_queja_se_clasifica_y_se_guarda_con_la_sucursal_de_destino():
+    casos = CasosFalsos()
+
+    texto = herramientas(casos=casos)["levantar_queja"].invoke(
+        {"numero_guia": "pec0000000018", "descripcion": "llegó roto el vaso", "contacto": "ana@correo.mx"}
+    )
+
+    assert texto.startswith("Queja registrada con folio Q-000001. Tipo: Daño.")
+    [caso] = casos.registrados
+    assert (caso.tipo, caso.guia, caso.sucursal, caso.categoria) == ("QUEJA", "PEC0000000018", "MTY", "DANO")
+
+
+def test_no_se_levanta_queja_de_una_guia_que_no_existe():
+    casos = CasosFalsos()
+
+    texto = herramientas(casos=casos)["levantar_queja"].invoke(
+        {"numero_guia": "PEC0000000026", "descripcion": "no llega", "contacto": "5512345678"}
+    )
+
+    assert texto == "No se pudo levantar la queja: No existe la guía."
+    assert casos.registrados == []
+
+
+def test_si_el_backend_no_responde_la_queja_se_guarda_sin_sucursal():
+    casos = CasosFalsos()
+    backend = backend_falso(lambda _: httpx.Response(503))
+
+    herramientas(backend, casos)["levantar_queja"].invoke(
+        {"numero_guia": "PEC0000000018", "descripcion": "no llega", "contacto": "5512345678"}
+    )
+
+    assert casos.registrados[0].sucursal is None
+
+
+@pytest.mark.parametrize("contacto", ["", "mañana te digo", "55 1234", "ana@correo"])
+def test_sin_un_contacto_valido_no_se_registra_nada(contacto):
+    casos = CasosFalsos()
+    tools = herramientas(casos=casos)
+
+    queja = tools["levantar_queja"].invoke(
+        {"numero_guia": "PEC0000000018", "descripcion": "no llega", "contacto": contacto}
+    )
+    atencion = tools["pasar_a_empleado"].invoke({"motivo": "quiero factura", "contacto": contacto})
+
+    assert queja.startswith("Falta un contacto válido") and atencion.startswith("Falta un contacto válido")
+    assert casos.registrados == []
+
+
+def test_pasar_a_empleado_crea_un_caso_de_atencion_con_folio():
+    casos = CasosFalsos()
+
+    texto = herramientas(casos=casos)["pasar_a_empleado"].invoke(
+        {"motivo": "quiere factura de su envío", "contacto": "(55) 1234-5678"}
+    )
+
+    assert texto.startswith("Caso pasado a un empleado con folio A-000001.")
+    assert casos.registrados[0].tipo == "ATENCION" and casos.registrados[0].guia is None
