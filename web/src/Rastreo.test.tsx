@@ -109,6 +109,47 @@ describe('Rastreo', () => {
     expect(fetchFalso).not.toHaveBeenCalled()
   })
 
+  it('con la foto de una etiqueta, lee el número y rastrea la guía', async () => {
+    const fetchFalso = vi.fn((url: string) => {
+      const cuerpo = url.endsWith('/api/etiquetas') ? { numero: 'PEC9000000027' } : RASTREO
+      return Promise.resolve(new Response(JSON.stringify(cuerpo), { status: 200 }))
+    })
+    vi.stubGlobal('fetch', fetchFalso)
+    const persona = userEvent.setup()
+    render(<Rastreo />)
+
+    const foto = new File(['foto'], 'etiqueta.jpg', { type: 'image/jpeg' })
+    await persona.upload(screen.getByLabelText('Foto de la etiqueta'), foto)
+
+    expect(await screen.findByRole('heading', { name: 'En tránsito' })).toBeInTheDocument()
+    expect(screen.getByLabelText('Número de guía')).toHaveValue('PEC9000000027')
+    // Primero al chatbot (con la foto como archivo) y luego al backend.
+    const [primera, segunda] = fetchFalso.mock.calls as unknown as [string, RequestInit][]
+    expect(primera[0]).toMatch(/\/api\/etiquetas$/)
+    expect(primera[1].body).toBeInstanceOf(FormData)
+    expect(primera[1].headers).toBeUndefined()
+    expect(segunda[0]).toMatch(/\/api\/guias\/PEC9000000027$/)
+  })
+
+  it('si la foto no se puede leer, muestra el mensaje del chatbot', async () => {
+    simularBackend(422, { detail: 'No encontré un número de guía en la foto.' })
+    const persona = userEvent.setup()
+    render(<Rastreo />)
+
+    await persona.upload(screen.getByLabelText('Foto de la etiqueta'), new File(['x'], 'a.png', { type: 'image/png' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No encontré un número de guía')
+  })
+
+  it('ofrece una etiqueta de ejemplo para descargar', () => {
+    render(<Rastreo />)
+
+    expect(screen.getByRole('link', { name: 'Descarga una etiqueta de ejemplo' })).toHaveAttribute(
+      'href',
+      '/etiquetas/con-incidencia.png',
+    )
+  })
+
   it('un clic en una guía de ejemplo la escribe y la busca', async () => {
     const fetchFalso = simularBackend(200, RASTREO)
     const persona = userEvent.setup()

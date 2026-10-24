@@ -1,6 +1,7 @@
-import { useState, type FormEvent } from 'react'
-import { ErrorDeApi, pedir } from './api'
+import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { CHATBOT_URL, ErrorDeApi, pedir } from './api'
 import { fechaHoraLegible } from './fechas'
+import { reducirFoto } from './fotos'
 import type { Rastreo as DatosDeRastreo } from './tipos'
 
 /** Guías de demostración que existen en la base (migración V3 del backend), para quien visita la página. */
@@ -48,6 +49,37 @@ export default function Rastreo() {
     void consultar(guia)
   }
 
+  // El <input type="file"> está escondido: el botón "Leer etiqueta" lo abre.
+  const selectorDeFoto = useRef<HTMLInputElement>(null)
+  const [leyendo, setLeyendo] = useState(false)
+
+  async function leerEtiqueta(evento: ChangeEvent<HTMLInputElement>) {
+    const archivo = evento.target.files?.[0]
+    evento.target.value = '' // para poder elegir la misma foto otra vez
+    if (!archivo) {
+      return
+    }
+    setLeyendo(true)
+    setError(null)
+    setRastreo(null)
+    try {
+      const formulario = new FormData()
+      formulario.append('foto', await reducirFoto(archivo), 'etiqueta.jpg')
+      const { numero: leido } = await pedir<{ numero: string }>(
+        '/api/etiquetas',
+        { method: 'POST', body: formulario },
+        CHATBOT_URL,
+      )
+      setNumero(leido)
+      setLeyendo(false)
+      await consultar(leido)
+    } catch (e) {
+      setError(e instanceof ErrorDeApi ? e.message : 'No pudimos leer la etiqueta. Intenta de nuevo.')
+    } finally {
+      setLeyendo(false)
+    }
+  }
+
   return (
     <div>
       <p>Escribe tu número de guía para ver dónde va tu paquete.</p>
@@ -83,6 +115,34 @@ export default function Rastreo() {
           </button>
         ))}
       </p>
+
+      <div className="leer-etiqueta">
+        {/* capture="environment": en el celular abre directo la cámara de atrás. */}
+        <input
+          ref={selectorDeFoto}
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+          capture="environment"
+          hidden
+          aria-label="Foto de la etiqueta"
+          onChange={leerEtiqueta}
+        />
+        <button
+          type="button"
+          className="boton boton-secundario"
+          disabled={leyendo || buscando}
+          onClick={() => selectorDeFoto.current?.click()}
+        >
+          {leyendo ? 'Leyendo la etiqueta…' : '📷 Leer etiqueta con una foto'}
+        </button>
+        <p className="nota">
+          La foto no se guarda: solo se lee el número de guía.{' '}
+          <a href="/etiquetas/con-incidencia.png" download>
+            Descarga una etiqueta de ejemplo
+          </a>
+          .
+        </p>
+      </div>
 
       {/* role="alert" hace que un lector de pantalla lea el error en voz alta en cuanto aparece. */}
       {error && (

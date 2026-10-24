@@ -25,9 +25,11 @@ export class ErrorDeApi extends Error {
 export async function pedir<T>(ruta: string, opciones: RequestInit = {}, servidor = API_URL): Promise<T> {
   let respuesta: Response
   try {
+    // Con un archivo (FormData) el navegador pone el Content-Type correcto, con su separador; si no, es JSON.
+    const esArchivo = opciones.body instanceof FormData
     respuesta = await fetch(`${servidor}${ruta}`, {
       ...opciones,
-      headers: { 'Content-Type': 'application/json', ...opciones.headers },
+      headers: esArchivo ? opciones.headers : { 'Content-Type': 'application/json', ...opciones.headers },
     })
   } catch {
     throw new ErrorDeApi(0, 'No pudimos conectar con el servidor. Revisa tu conexión e intenta de nuevo.')

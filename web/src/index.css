@@ -452,3 +452,25 @@ select:focus {
   outline: 2px solid var(--color-marca);
   outline-offset: 1px;
 }
+/* --- Leer etiqueta con una foto --- */
+.leer-etiqueta {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--color-borde);
+}
+
+.boton-secundario {
+  color: var(--color-marca-oscuro);
+  background: #fff;
+  border: 1px solid var(--color-marca);
+}
+
+.boton-secundario:hover:not(:disabled) {
+  color: #fff;
+}
+
+.nota {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-texto-suave);
+}
