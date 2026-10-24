@@ -4,7 +4,7 @@ import httpx
 import pytest
 from falsos import CasosFalsos, backend_falso, herramientas_falsas, problema
 
-from pecdmx_chatbot.herramientas import SIN_SISTEMA
+from pecdmx_chatbot.herramientas import SIN_SISTEMA, _pesos
 
 
 def herramientas(backend=None, casos=None) -> dict:
@@ -36,7 +36,13 @@ def test_la_cotizacion_trae_el_desglose_completo():
     )
 
     assert "se cobran 5 kg" in texto
-    assert "total $359.6 MXN" in texto
+    # Siempre con 2 decimales, aunque el JSON traiga 359.6.
+    assert "Subtotal $310.00, IVA $49.60, total $359.60 MXN" in texto
+
+
+def test_los_montos_grandes_llevan_comas_de_miles():
+    assert _pesos(1234.5) == "$1,234.50"
+    assert _pesos("2000") == "$2,000.00"
 
 
 def test_si_el_backend_rechaza_la_cotizacion_explica_por_que():

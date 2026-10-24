@@ -186,5 +186,10 @@ def _texto_de_cotizacion(c: dict[str, Any]) -> str:
         f"(zona {c['zona']}: {c['descripcionZona']}).\n"
         f"Peso real {c['pesoRealKg']} kg, peso volumétrico {c['pesoVolumetricoKg']} kg; "
         f"se cobran {c['pesoCobrableKg']} kg.\n"
-        f"Subtotal ${c['subtotal']}, IVA ${c['iva']}, total ${c['total']} {c['moneda']}."
+        f"Subtotal {_pesos(c['subtotal'])}, IVA {_pesos(c['iva'])}, total {_pesos(c['total'])} {c['moneda']}."
     )
+
+
+def _pesos(monto: float | str) -> str:
+    """359.6 → "$359.60": siempre con 2 decimales (el JSON pierde el cero final) y comas de miles."""
+    return f"${float(monto):,.2f}"
