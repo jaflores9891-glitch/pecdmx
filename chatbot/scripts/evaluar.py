@@ -36,7 +36,9 @@ from pecdmx_chatbot.politicas import leer_politicas
 
 CASOS = Path(__file__).resolve().parents[1] / "evaluaciones" / "casos.json"
 MINIMO = 0.85
-PAUSA_SEGUNDOS = 2.0  # entre preguntas, para no rebasar el límite por minuto del plan gratis
+# Entre preguntas, para no rebasar el límite por minuto de Groq gratis (8,000 tokens; cada pregunta usa
+# ~1,500-3,500). Con 2 s se saturaba en la CI y, sin cupo de Gemini ese día, 3 casos fallaron.
+PAUSA_SEGUNDOS = 8.0
 
 SUCURSALES = {
     "CDMX": "Ciudad de México", "GDL": "Guadalajara", "MTY": "Monterrey",
