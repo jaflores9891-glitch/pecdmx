@@ -1,7 +1,10 @@
-// La única puerta de la página hacia el backend. Todos los componentes piden datos a través de aquí.
+// La única puerta de la página hacia los servidores (backend y chatbot). Todos los componentes pasan por aquí.
 
 /** Dirección del backend. En tu laptop, si no hay VITE_API_URL, se usa el backend local. */
 export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8080').replace(/\/$/, '')
+
+/** Dirección del chatbot (otro servidor). En tu laptop, si no hay VITE_CHATBOT_URL, se usa el local. */
+export const CHATBOT_URL = (import.meta.env.VITE_CHATBOT_URL ?? 'http://localhost:8000').replace(/\/$/, '')
 
 /** Un error que entiende una persona: trae el mensaje en español que mandó el backend (Problem Details). */
 export class ErrorDeApi extends Error {
@@ -19,10 +22,10 @@ export class ErrorDeApi extends Error {
  * Si el backend responde con error, lanza un ErrorDeApi con su mensaje.
  * Si ni siquiera hay respuesta (sin internet, servidor caído), lanza un ErrorDeApi con estado 0.
  */
-export async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promise<T> {
+export async function pedir<T>(ruta: string, opciones: RequestInit = {}, servidor = API_URL): Promise<T> {
   let respuesta: Response
   try {
-    respuesta = await fetch(`${API_URL}${ruta}`, {
+    respuesta = await fetch(`${servidor}${ruta}`, {
       ...opciones,
       headers: { 'Content-Type': 'application/json', ...opciones.headers },
     })
@@ -39,11 +42,12 @@ export async function pedir<T>(ruta: string, opciones: RequestInit = {}): Promis
 /** Saca el mensaje del error: primero "detail" de Problem Details; si no hay, uno genérico. */
 async function mensajeDeError(respuesta: Response): Promise<string> {
   try {
-    const problema = (await respuesta.json()) as { detail?: string; errores?: string[] }
+    const problema = (await respuesta.json()) as { detail?: unknown; errores?: string[] }
     if (problema.errores?.length) {
       return problema.errores.join(' ')
     }
-    if (problema.detail) {
+    // El chatbot (FastAPI) manda en "detail" un texto o, si la petición no es válida, una lista.
+    if (typeof problema.detail === 'string' && problema.detail) {
       return problema.detail
     }
   } catch {
