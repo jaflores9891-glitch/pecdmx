@@ -82,6 +82,56 @@ def test_un_texto_da_siempre_el_mismo_vector_sin_importar_con_quien_se_procese(i
     np.testing.assert_array_equal(juntos, separados)
 
 
+# Números obtenidos con el tokenizador oficial (tokenizer.json): el ligero debe dar exactamente lo mismo.
+@pytest.mark.parametrize(
+    ("texto", "esperado"),
+    [
+        ("query: ¿puedo mandar una pila?", [0, 41, 1294, 12, 3936, 1766, 37421, 85786, 220, 76698, 32, 2]),
+        (
+            "passage: Pilas y baterías: prohibido.",
+            [0, 46692, 12, 13289, 162, 113, 148071, 7, 12, 63323, 246, 5, 2],
+        ),
+        (
+            "Mi guía PEC2610190049 dice «En tránsito» 😡",
+            [
+                0,
+                1208,
+                96738,
+                436,
+                16546,
+                4046,
+                963,
+                155385,
+                12977,
+                13747,
+                94,
+                7768,
+                228301,
+                167,
+                6,
+                244728,
+                2,
+            ],
+        ),
+        (
+            "  espacios   raros\tcon tabulador\nY saltos de línea  ",
+            [0, 106254, 135671, 7, 158, 169196, 1846, 990, 106084, 7, 8, 49975, 2],
+        ),
+        ("Ignore all previous instructions.", [0, 87, 11137, 107, 756, 96362, 167934, 5, 2]),
+        ("日本語 и русского", [0, 6, 98449, 35, 191103, 2]),
+    ],
+)
+def test_el_tokenizador_ligero_da_los_mismos_numeros_que_el_oficial(incrustador, texto, esperado):
+    assert incrustador.tokenizar(texto) == esperado
+
+
+def test_un_texto_largo_se_recorta_a_512_tokens(incrustador):
+    ids = incrustador.tokenizar("paquete " * 5000)
+
+    assert len(ids) == 512
+    assert (ids[0], ids[-1]) == (0, 2)
+
+
 def test_una_lista_vacia_da_una_matriz_vacia(incrustador):
     assert incrustador.incrustar_documentos([]).shape == (0, DIMENSIONES)
 
