@@ -4,8 +4,11 @@ El resto del chatbot nunca habla con Groq o con Gemini directamente: usa lo que 
 Ambos son modelos de chat de LangChain, así que se usan igual (esa es la interfaz común).
 """
 
+from collections.abc import Sequence
+
 from langchain_core.language_models import BaseChatModel
 from langchain_core.runnables import Runnable
+from langchain_core.tools import BaseTool
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 
@@ -46,14 +49,23 @@ def proveedores_configurados(config: Configuracion) -> list[BaseChatModel]:
     return proveedores
 
 
-def encadenar_con_respaldo(proveedores: list[BaseChatModel]) -> Runnable:
-    """Usa el primero; si falla (límite alcanzado, caída, error), intenta con el siguiente, en orden."""
+def encadenar_con_respaldo(
+    proveedores: list[BaseChatModel], herramientas: Sequence[BaseTool] = ()
+) -> Runnable:
+    """Usa el primero; si falla (límite alcanzado, caída, error), intenta con el siguiente, en orden.
+
+    Si hay herramientas, se le enseñan a CADA proveedor antes de encadenarlos: así el respaldo
+    también sabe rastrear y cotizar.
+    """
     if not proveedores:
         raise SinProveedoresError()
-    principal, *respaldos = proveedores
+    modelos: list[Runnable] = (
+        [p.bind_tools(herramientas) for p in proveedores] if herramientas else proveedores
+    )
+    principal, *respaldos = modelos
     return principal.with_fallbacks(respaldos) if respaldos else principal
 
 
-def crear_llm(config: Configuracion) -> Runnable:
+def crear_llm(config: Configuracion, herramientas: Sequence[BaseTool] = ()) -> Runnable:
     """El LLM listo para usar, con respaldo automático si hay más de un proveedor."""
-    return encadenar_con_respaldo(proveedores_configurados(config))
+    return encadenar_con_respaldo(proveedores_configurados(config), herramientas)
