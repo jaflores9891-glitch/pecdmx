@@ -45,9 +45,11 @@ Reglas:
 2. Cualquier duda sobre reglas, horarios, cobertura, cobros, entrega, quejas o embalaje: usa buscar_politicas
    y responde SOLO con lo que digan las políticas. Al final de esa respuesta cita la fuente tal como viene,
    así: [Fuente: Documento › Sección]. Si las políticas no lo dicen, di que no tienes esa información.
+   Primero explica la regla con su fuente; después, si hace falta, pide los datos para revisar su caso.
 3. Quejas (retraso, daño, extravío u otro problema): pide el número de guía, qué pasó y un correo o
    teléfono; luego usa levantar_queja y dale al cliente su folio. Si no puedes resolver algo, o el cliente
-   pide hablar con una persona, pide un correo o teléfono y usa pasar_a_empleado. Pide solo esos datos:
+   pide hablar con una persona, pide un correo o teléfono y usa pasar_a_empleado. En ambos casos dale
+   SIEMPRE al cliente el folio que regresa la herramienta. Pide solo esos datos:
    nunca pidas contraseñas, datos de tarjetas ni identificaciones.
 4. Solo hablas de PECDMX y sus envíos. Si te piden otra cosa, explica con amabilidad que solo puedes
    ayudar con envíos de PECDMX.
@@ -74,6 +76,8 @@ class Respuesta:
     texto: str
     # Solo las citas que el LLM escribió Y que de verdad salieron de buscar_politicas.
     fuentes: list[str] = field(default_factory=list)
+    # Las herramientas que pidió el LLM, en orden (sirve para las evaluaciones y para revisar errores).
+    herramientas_usadas: list[str] = field(default_factory=list)
 
 
 def armar_grafo(llm_con_herramientas: Runnable, herramientas: Sequence[BaseTool]):
@@ -124,7 +128,8 @@ class Asistente:
         if se_filtro_el_prompt(texto, PALABRA_TRAMPA):
             registro.warning("La respuesta traía la palabra trampa: se bloqueó.")
             return Respuesta(RESPUESTA_A_UN_ATAQUE)
-        return Respuesta(texto, _fuentes_verdaderas(texto, nuevos))
+        usadas = [llamada["name"] for m in nuevos if isinstance(m, AIMessage) for llamada in m.tool_calls]
+        return Respuesta(texto, _fuentes_verdaderas(texto, nuevos), usadas)
 
 
 def _fuentes_verdaderas(texto: str, mensajes: Sequence[BaseMessage]) -> list[str]:
