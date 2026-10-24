@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 from pecdmx_chatbot.agente import Asistente, Mensaje
 from pecdmx_chatbot.casos import Caso, CasoNoEncontradoError, RepositorioDeCasos
 from pecdmx_chatbot.configuracion import Configuracion, configuracion
+from pecdmx_chatbot.defensas import DetectorDeInyeccion, LimiteDeMensajes
 from pecdmx_chatbot.gafetes import GafeteInvalidoError, Operador, leer_gafete
 
 registro = logging.getLogger("pecdmx_chatbot")
@@ -42,7 +43,10 @@ def armar_asistente(config: Configuracion, casos: RepositorioDeCasos) -> Asisten
     herramientas = crear_herramientas(
         ClienteDeNegocio(config.backend_url), conocimiento, casos, ClasificadorDeQuejas(incrustador)
     )
-    return Asistente(crear_llm(config, herramientas), herramientas)
+    detector = (
+        DetectorDeInyeccion.con_groq(config.groq_api_key.get_secret_value()) if config.groq_api_key else None
+    )
+    return Asistente(crear_llm(config, herramientas), herramientas, detector)
 
 
 def armar_casos(config: Configuracion) -> RepositorioDeCasos | None:
@@ -93,12 +97,33 @@ class SolicitudChatJson(BaseModel):
     def el_ultimo_es_del_cliente(cls, mensajes: list[MensajeJson]) -> list[MensajeJson]:
         if mensajes[-1].rol != "cliente":
             raise ValueError("El último mensaje debe ser del cliente.")
+        # Tope a la conversación completa: un texto enorme gasta el límite gratis del LLM y esconde ataques.
+        if sum(len(m.texto) for m in mensajes) > 6000:
+            raise ValueError("La conversación es demasiado larga. Empieza una nueva.")
         return mensajes
 
 
 class RespuestaChatJson(BaseModel):
     respuesta: str
     fuentes: list[str]
+
+
+# Por persona (su IP) y para todo el servidor: así nadie agota solo el límite gratis de Groq.
+limite_por_persona = LimiteDeMensajes(maximo=10, ventana_segundos=60)
+limite_global = LimiteDeMensajes(maximo=60, ventana_segundos=60)
+
+
+def ip_del_cliente(request: Request) -> str:
+    # En Render la petición pasa por un intermediario, que pone la IP real en X-Forwarded-For.
+    reenviada = request.headers.get("x-forwarded-for", "")
+    return reenviada.split(",")[0].strip() or (request.client.host if request.client else "desconocida")
+
+
+def revisar_limites(request: Request) -> None:
+    if not limite_por_persona.permitir(ip_del_cliente(request)) or not limite_global.permitir("todos"):
+        raise HTTPException(
+            429, "Vas muy rápido. Espera un minuto y vuelve a intentarlo.", {"Retry-After": "60"}
+        )
 
 
 def obtener_asistente(request: Request) -> Asistente:
@@ -115,7 +140,7 @@ def salud() -> dict[str, str]:
 
 
 # "def" normal (no async): FastAPI la corre en un hilo aparte, así una respuesta lenta no frena a las demás.
-@app.post("/api/chat")
+@app.post("/api/chat", dependencies=[Depends(revisar_limites)])
 def chatear(
     solicitud: SolicitudChatJson, asistente: Annotated[Asistente, Depends(obtener_asistente)]
 ) -> RespuestaChatJson:

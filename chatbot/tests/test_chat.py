@@ -3,8 +3,10 @@
 import pytest
 from fastapi.testclient import TestClient
 
+from pecdmx_chatbot import app as rutas
 from pecdmx_chatbot.agente import Mensaje, Respuesta
 from pecdmx_chatbot.app import app
+from pecdmx_chatbot.defensas import LimiteDeMensajes
 
 
 class AsistenteFalso:
@@ -20,10 +22,30 @@ class AsistenteFalso:
 
 
 @pytest.fixture
-def cliente():
+def cliente(monkeypatch):
+    # Límites nuevos en cada test: si no, los tests anteriores ya habrían gastado los mensajes permitidos.
+    monkeypatch.setattr(rutas, "limite_por_persona", LimiteDeMensajes(maximo=10))
+    monkeypatch.setattr(rutas, "limite_global", LimiteDeMensajes(maximo=60))
     # Sin "with": no corre el arranque real (que cargaría el modelo y la base de datos).
     yield TestClient(app)
     app.state.asistente = None
+
+
+def test_despues_de_10_mensajes_en_un_minuto_pide_esperar(cliente):
+    app.state.asistente = AsistenteFalso()
+
+    estados = [cliente.post("/api/chat", json=pregunta()).status_code for _ in range(11)]
+    otra_persona = cliente.post("/api/chat", json=pregunta(), headers={"X-Forwarded-For": "201.1.2.3"})
+
+    assert estados == [200] * 10 + [429]
+    assert otra_persona.status_code == 200
+
+
+def test_una_conversacion_demasiado_larga_da_422(cliente):
+    app.state.asistente = AsistenteFalso()
+    mensajes = [{"rol": "cliente" if i % 2 == 0 else "asistente", "texto": "a" * 900} for i in range(7)]
+
+    assert cliente.post("/api/chat", json={"mensajes": mensajes}).status_code == 422
 
 
 def pregunta(texto: str = "hola") -> dict:
