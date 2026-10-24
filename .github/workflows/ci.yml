@@ -217,6 +217,7 @@ jobs:
             exit 0
           fi
           uv run python scripts/evaluar.py
+          uv run python scripts/evaluar_etiquetas.py
 
   # "Semáforo final": GitHub exige solo este check para aceptar cambios en main.
   # Cada job nuevo se agrega a la lista "needs" y así no hay que tocar la regla de GitHub.
