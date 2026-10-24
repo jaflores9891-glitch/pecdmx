@@ -51,20 +51,42 @@ def sucursal(codigo: str) -> dict:
 def backend_de_prueba(peticion: httpx.Request) -> httpx.Response:
     """Una guía conocida (PEC0000000018, en tránsito) y la cotización real de 3.5 kg CDMX→GDL ($359.60)."""
     if peticion.url.path == "/api/guias/PEC0000000018":
-        evento = {"estado": {"codigo": "EN_TRANSITO", "nombre": "En tránsito", "descripcion": "Va en camino."},
-                  "fechaHora": "2026-10-21T02:30:00Z", "sucursal": sucursal("CDMX"), "nota": None}  # fmt: skip
-        return httpx.Response(200, json={
-            "numero": "PEC0000000018", "origen": sucursal("CDMX"), "destino": sucursal("MTY"),
-            "estado": evento["estado"], "historial": [evento],
-        })  # fmt: skip
+        en_transito = {"codigo": "EN_TRANSITO", "nombre": "En tránsito", "descripcion": "Va en camino."}
+        evento = {
+            "estado": en_transito,
+            "fechaHora": "2026-10-21T02:30:00Z",
+            "sucursal": sucursal("CDMX"),
+            "nota": None,
+        }
+        return httpx.Response(
+            200,
+            json={
+                "numero": "PEC0000000018",
+                "origen": sucursal("CDMX"),
+                "destino": sucursal("MTY"),
+                "estado": en_transito,
+                "historial": [evento],
+            },
+        )
     if peticion.url.path == "/api/cotizaciones":
         datos = json.loads(peticion.content)
         if (datos["origen"], datos["destino"], datos["pesoKg"]) == ("CDMX", "GDL", 3.5):
-            return httpx.Response(200, json={
-                "origen": sucursal("CDMX"), "destino": sucursal("GDL"), "zona": 2, "descripcionZona": "Regional",
-                "pesoRealKg": 3.5, "pesoVolumetricoKg": 4.8, "pesoCobrableKg": 5,
-                "subtotal": "310.00", "iva": "49.60", "total": "359.60", "moneda": "MXN",
-            })  # fmt: skip
+            return httpx.Response(
+                200,
+                json={
+                    "origen": sucursal("CDMX"),
+                    "destino": sucursal("GDL"),
+                    "zona": 2,
+                    "descripcionZona": "Regional",
+                    "pesoRealKg": 3.5,
+                    "pesoVolumetricoKg": 4.8,
+                    "pesoCobrableKg": 5,
+                    "subtotal": "310.00",
+                    "iva": "49.60",
+                    "total": "359.60",
+                    "moneda": "MXN",
+                },
+            )
         return httpx.Response(422, json={"detail": "En la evaluación solo se cotiza 3.5 kg de CDMX a GDL."})
     return httpx.Response(404, json={"detail": f"No existe la guía {peticion.url.path.rsplit('/', 1)[-1]}."})
 
