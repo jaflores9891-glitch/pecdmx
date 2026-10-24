@@ -1,19 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { CHATBOT_URL } from './api'
 import AvisoDeDespertar from './AvisoDeDespertar'
+import Chat from './Chat'
 import Cotizador from './Cotizador'
 import Rastreo from './Rastreo'
 
-type Pestana = 'rastrear' | 'cotizar'
+type Pestana = 'rastrear' | 'cotizar' | 'asistente'
 
 const PESTANAS: { id: Pestana; titulo: string }[] = [
   { id: 'rastrear', titulo: 'Rastrear' },
   { id: 'cotizar', titulo: 'Cotizar' },
+  { id: 'asistente', titulo: 'Asistente' },
 ]
+
+const PANELES: Record<Pestana, () => React.JSX.Element> = {
+  rastrear: Rastreo,
+  cotizar: Cotizador,
+  asistente: Chat,
+}
 
 /** La página completa: encabezado, pestañas y pie. Cada pestaña mostrará su propio componente. */
 export default function App() {
   // "useState" guarda qué pestaña está abierta; al cambiarla, React vuelve a pintar la página.
   const [pestana, setPestana] = useState<Pestana>('rastrear')
+  const Panel = PANELES[pestana]
+
+  // "Toca la puerta" del chatbot al abrir la página: si estaba dormido, empieza a despertar ya,
+  // antes de que alguien le escriba. No importa la respuesta (ni si falla).
+  useEffect(() => {
+    fetch(`${CHATBOT_URL}/salud`).catch(() => {})
+  }, [])
 
   return (
     <div className="pagina">
@@ -45,11 +61,7 @@ export default function App() {
         </div>
 
         <section role="tabpanel" id={`panel-${pestana}`} aria-labelledby={`pestana-${pestana}`} className="panel">
-          {pestana === 'rastrear' ? (
-            <Rastreo />
-          ) : (
-            <Cotizador />
-          )}
+          <Panel />
         </section>
       </main>
 
