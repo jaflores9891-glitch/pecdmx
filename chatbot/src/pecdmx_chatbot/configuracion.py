@@ -42,6 +42,17 @@ class Configuracion(BaseSettings):
     # PostgreSQL con pgvector (Neon en producción), formato postgresql://usuario:contraseña@host/base
     database_url: SecretStr | None = None
 
+    # El backend de negocio (Java), al que se le preguntan rastreos y cotizaciones.
+    backend_url: str = "http://localhost:8080"
+
+    # Páginas web que pueden usar el chatbot desde el navegador (CORS), separadas por comas.
+    # Es la misma variable que usa el backend.
+    pecdmx_cors_origenes: str = "http://localhost:5173"
+
+    @property
+    def origenes_permitidos(self) -> list[str]:
+        return [o.strip().rstrip("/") for o in self.pecdmx_cors_origenes.split(",") if o.strip()]
+
 
 @lru_cache
 def configuracion() -> Configuracion:
