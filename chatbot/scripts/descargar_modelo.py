@@ -23,10 +23,12 @@ ARCHIVOS = (
         "modelo.onnx",
         "dd476dd0c2514e9b9be83aeb3853fac0763e0bdf4a71645407587d77c48a2d88",
     ),
+    # El tokenizador en formato SentencePiece: 5 MB y ~65 MB de memoria
+    # (tokenizer.json usaba ~290 MB de memoria, demasiado para los 512 MB de Render).
     (
-        "tokenizer.json",
-        "tokenizer.json",
-        "0b44a9d7b51c3c62626640cda0e2c2f70fdacdc25bbbd68038369d14ebdf4c39",
+        "sentencepiece.bpe.model",
+        "sentencepiece.bpe.model",
+        "cfc8146abe2a0488e9e2a0c56de7952f7c11ab059eca145a0a727afce0db2865",
     ),
 )
 
@@ -65,6 +67,9 @@ def descargar(remoto: str, destino: Path, huella_esperada: str) -> None:
             "  El archivo se borró. No se usa un modelo que no sea exactamente el esperado."
         )
     ruta_temporal.replace(destino)
+    # Los temporales nacen legibles solo para su dueño; el modelo debe poder leerlo cualquier usuario
+    # (en Docker lo descarga root y lo usa el usuario sin permisos "pecdmx"), pero nadie lo modifica.
+    destino.chmod(0o644)
     print(f"✓ {destino.name}: {destino.stat().st_size / 1_000_000:.1f} MB, huella verificada.")
 
 
