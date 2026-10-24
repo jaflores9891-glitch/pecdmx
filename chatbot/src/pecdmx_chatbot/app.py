@@ -7,21 +7,25 @@ from typing import Annotated, Literal
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field, field_validator
 
 from pecdmx_chatbot.agente import Asistente, Mensaje
+from pecdmx_chatbot.casos import Caso, CasoNoEncontradoError, RepositorioDeCasos
 from pecdmx_chatbot.configuracion import Configuracion, configuracion
+from pecdmx_chatbot.gafetes import GafeteInvalidoError, Operador, leer_gafete
 
 registro = logging.getLogger("pecdmx_chatbot")
 
 
-def armar_asistente(config: Configuracion) -> Asistente | None:
+def armar_asistente(config: Configuracion, casos: RepositorioDeCasos) -> Asistente | None:
     """Junta todas las piezas. Si falta configuración, el chatbot arranca sin asistente (responde 503)."""
     if not (config.groq_api_key or config.gemini_api_key) or not config.database_url:
         registro.warning("Falta GROQ_API_KEY/GEMINI_API_KEY o DATABASE_URL: /api/chat no estará disponible.")
         return None
 
     # Importados aquí: cargar el modelo y la base solo hace falta si el asistente se va a armar.
+    from pecdmx_chatbot.clasificador import ClasificadorDeQuejas
     from pecdmx_chatbot.conocimiento import BaseDeConocimiento
     from pecdmx_chatbot.embeddings import Incrustador
     from pecdmx_chatbot.herramientas import crear_herramientas
@@ -29,21 +33,34 @@ def armar_asistente(config: Configuracion) -> Asistente | None:
     from pecdmx_chatbot.negocio import ClienteDeNegocio
     from pecdmx_chatbot.politicas import leer_politicas
 
-    conocimiento = BaseDeConocimiento(
-        config.database_url.get_secret_value(), Incrustador(config.modelo_carpeta)
-    )
+    incrustador = Incrustador(config.modelo_carpeta)
+    conocimiento = BaseDeConocimiento(config.database_url.get_secret_value(), incrustador)
     conocimiento.crear_esquema()
     if conocimiento.indexar(leer_politicas(config.politicas_carpeta)):
         registro.info("Políticas indexadas de nuevo (cambiaron desde la última vez).")
 
-    herramientas = crear_herramientas(ClienteDeNegocio(config.backend_url), conocimiento)
+    herramientas = crear_herramientas(
+        ClienteDeNegocio(config.backend_url), conocimiento, casos, ClasificadorDeQuejas(incrustador)
+    )
     return Asistente(crear_llm(config, herramientas), herramientas)
+
+
+def armar_casos(config: Configuracion) -> RepositorioDeCasos | None:
+    if not config.database_url:
+        return None
+    casos = RepositorioDeCasos(config.database_url.get_secret_value())
+    casos.crear_esquema()
+    return casos
 
 
 @asynccontextmanager
 async def ciclo_de_vida(app: FastAPI) -> AsyncIterator[None]:
     """Lo que se hace una vez al arrancar el servidor (antes de atender a nadie)."""
-    app.state.asistente = armar_asistente(configuracion())
+    config = configuracion()
+    app.state.casos = armar_casos(config)
+    app.state.asistente = armar_asistente(config, app.state.casos) if app.state.casos else None
+    secreto = config.pecdmx_jwt_secreto
+    app.state.jwt_secreto = secreto.get_secret_value() if secreto else None
     yield
 
 
@@ -112,3 +129,62 @@ def chatear(
             503, "El asistente no pudo responder. Intenta de nuevo en unos minutos."
         ) from error
     return RespuestaChatJson(respuesta=respuesta.texto, fuentes=respuesta.fuentes)
+
+
+# --- Casos (quejas y pasos a empleado): solo empleados y gerentes, con el gafete del backend ---
+
+# auto_error=False: si no hay gafete, respondemos nosotros con 401 y un mensaje en español.
+portador = HTTPBearer(auto_error=False)
+
+
+def obtener_casos(request: Request) -> RepositorioDeCasos:
+    casos = getattr(request.app.state, "casos", None)
+    if casos is None:
+        raise HTTPException(503, "Los casos no están disponibles en este momento.")
+    return casos
+
+
+def obtener_operador(
+    request: Request, credenciales: Annotated[HTTPAuthorizationCredentials | None, Depends(portador)]
+) -> Operador:
+    secreto = getattr(request.app.state, "jwt_secreto", None)
+    if secreto is None:
+        raise HTTPException(503, "El acceso de empleados no está configurado.")
+    if credenciales is None:
+        raise HTTPException(401, "Inicia sesión para ver los casos.", {"WWW-Authenticate": "Bearer"})
+    try:
+        return leer_gafete(credenciales.credentials, secreto)
+    except GafeteInvalidoError as error:
+        raise HTTPException(
+            401, "Tu sesión no es válida o ya expiró.", {"WWW-Authenticate": "Bearer"}
+        ) from error
+
+
+class CierreJson(BaseModel):
+    respuesta: str = Field(min_length=1, max_length=2000)
+
+
+@app.get("/api/casos")
+def listar_casos(
+    casos: Annotated[RepositorioDeCasos, Depends(obtener_casos)],
+    operador: Annotated[Operador, Depends(obtener_operador)],
+    estado: Literal["ABIERTO", "CERRADO"] = "ABIERTO",
+) -> list[Caso]:
+    """Un empleado ve los casos de su sucursal (y los que no tienen sucursal); un gerente, todos."""
+    return casos.listar(estado, None if operador.rol == "GERENTE" else operador.sucursal)
+
+
+@app.post("/api/casos/{folio}/cierre")
+def cerrar_caso(
+    folio: str,
+    cierre: CierreJson,
+    casos: Annotated[RepositorioDeCasos, Depends(obtener_casos)],
+    operador: Annotated[Operador, Depends(obtener_operador)],
+) -> Caso:
+    try:
+        caso = casos.buscar(folio)
+        if not operador.puede_ver(caso.sucursal):
+            raise HTTPException(403, "Ese caso es de otra sucursal.")
+        return casos.cerrar(folio, operador.correo, cierre.respuesta)
+    except CasoNoEncontradoError as error:
+        raise HTTPException(404, f"No hay un caso abierto con el folio {folio}.") from error

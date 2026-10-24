@@ -49,6 +49,9 @@ class Configuracion(BaseSettings):
     # Es la misma variable que usa el backend.
     pecdmx_cors_origenes: str = "http://localhost:5173"
 
+    # La misma llave con la que el backend firma los gafetes (JWT) de empleados y gerentes.
+    pecdmx_jwt_secreto: SecretStr | None = None
+
     @property
     def origenes_permitidos(self) -> list[str]:
         return [o.strip().rstrip("/") for o in self.pecdmx_cors_origenes.split(",") if o.strip()]

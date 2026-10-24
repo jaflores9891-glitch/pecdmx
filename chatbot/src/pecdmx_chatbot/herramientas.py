@@ -1,21 +1,27 @@
-"""Las herramientas que el LLM puede usar: rastrear, cotizar y buscar en las políticas.
+"""Las herramientas que el LLM puede usar: rastrear, cotizar, buscar en las políticas, levantar quejas
+y pasar el caso a un empleado.
 
 El LLM no ejecuta nada por sí mismo: pide "usa rastrear_guia con PEC..." y el agente la corre.
 La descripción (docstring) de cada herramienta es lo que el LLM lee para decidir cuándo usarla.
 Las herramientas nunca lanzan errores al LLM: regresan un texto que explica qué pasó, para que lo cuente.
 """
 
+import re
 from datetime import datetime
 from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from langchain_core.tools import BaseTool, tool
 
+from pecdmx_chatbot.casos import CasoNuevo, RepositorioDeCasos
+from pecdmx_chatbot.clasificador import NOMBRES, ClasificadorDeQuejas
 from pecdmx_chatbot.conocimiento import BaseDeConocimiento
 from pecdmx_chatbot.negocio import BackendNoDisponibleError, ClienteDeNegocio, ErrorDelNegocio
 
 HORA_DE_MEXICO = ZoneInfo("America/Mexico_City")
 CodigoDeSucursal = Literal["CDMX", "GDL", "MTY", "PUE", "QRO", "TIJ"]
+CORREO = re.compile(r"[^@\s]+@[^@\s]+\.[^@\s]+")
+LARGO_MAXIMO = 1000
 
 SIN_SISTEMA = (
     "El sistema de PECDMX no respondió en este momento. "
@@ -23,7 +29,12 @@ SIN_SISTEMA = (
 )
 
 
-def crear_herramientas(negocio: ClienteDeNegocio, conocimiento: BaseDeConocimiento) -> list[BaseTool]:
+def crear_herramientas(
+    negocio: ClienteDeNegocio,
+    conocimiento: BaseDeConocimiento,
+    casos: RepositorioDeCasos,
+    clasificador: ClasificadorDeQuejas,
+) -> list[BaseTool]:
     @tool
     def rastrear_guia(numero: str) -> str:
         """Consulta el estado actual y el historial de un envío de PECDMX.
@@ -75,7 +86,66 @@ def crear_herramientas(negocio: ClienteDeNegocio, conocimiento: BaseDeConocimien
         texto = "\n\n".join(f"[Fuente: {r.fragmento.cita}]\n{r.fragmento.contenido}" for r in resultados)
         return texto or "No se encontró nada en las políticas.", [r.fragmento.cita for r in resultados]
 
-    return [rastrear_guia, cotizar_envio, buscar_politicas]
+    @tool
+    def levantar_queja(numero_guia: str, descripcion: str, contacto: str) -> str:
+        """Registra una queja formal sobre un envío (retraso, daño, extravío u otro problema) y da su folio.
+
+        Antes de usarla, pide al cliente: el número de guía, qué pasó (con sus palabras) y un correo
+        o teléfono para responderle. Usa la descripción del cliente tal como la dio.
+        """
+        if not _es_contacto_valido(contacto):
+            return "Falta un contacto válido: pide al cliente un correo o un teléfono de 10 dígitos."
+        try:
+            sucursal = negocio.rastrear(numero_guia)["destino"]["codigo"]
+        except ErrorDelNegocio as error:
+            return f"No se pudo levantar la queja: {error}"
+        except BackendNoDisponibleError:
+            sucursal = None  # se registra igual; la verá cualquier empleado
+        clasificacion = clasificador.clasificar(descripcion)
+        folio = casos.registrar(
+            CasoNuevo(
+                tipo="QUEJA",
+                descripcion=descripcion[:LARGO_MAXIMO],
+                contacto=contacto[:200],
+                guia=numero_guia.strip().upper(),
+                sucursal=sucursal,
+                categoria=clasificacion.categoria,
+                confianza=clasificacion.confianza,
+            )
+        )
+        return (
+            f"Queja registrada con folio {folio}. Tipo: {NOMBRES[clasificacion.categoria]}. "
+            f"Un empleado la revisará y responderá a {contacto} en un máximo de 3 días hábiles."
+        )
+
+    @tool
+    def pasar_a_empleado(motivo: str, contacto: str, numero_guia: str = "") -> str:
+        """Pasa el caso a un empleado de PECDMX, que contactará al cliente.
+
+        Úsala cuando no puedas resolver lo que pide el cliente, o cuando pida hablar con una persona.
+        Antes, pide un correo o teléfono para contactarlo. El número de guía es opcional.
+        """
+        if not _es_contacto_valido(contacto):
+            return "Falta un contacto válido: pide al cliente un correo o un teléfono de 10 dígitos."
+        folio = casos.registrar(
+            CasoNuevo(
+                tipo="ATENCION",
+                descripcion=motivo[:LARGO_MAXIMO],
+                contacto=contacto[:200],
+                guia=numero_guia.strip().upper() or None,
+            )
+        )
+        return (
+            f"Caso pasado a un empleado con folio {folio}. Contactará al cliente en {contacto} "
+            "dentro del horario de atención."
+        )
+
+    return [rastrear_guia, cotizar_envio, buscar_politicas, levantar_queja, pasar_a_empleado]
+
+
+def _es_contacto_valido(contacto: str) -> bool:
+    """Un correo (algo@algo.algo) o un teléfono con al menos 10 dígitos."""
+    return bool(CORREO.fullmatch(contacto.strip())) or len(re.sub(r"\D", "", contacto)) >= 10
 
 
 def _fecha(iso: str) -> str:

@@ -1,15 +1,14 @@
 """El grafo de LangGraph con un LLM con guion: se revisa el camino pensar → herramienta → pensar."""
 
-from falsos import ConocimientoFalso, LLMConGuion, backend_que_sabe_todo, pide
+from falsos import CasosFalsos, LLMConGuion, herramientas_falsas, pide
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 
 from pecdmx_chatbot.agente import Asistente, Mensaje
-from pecdmx_chatbot.herramientas import crear_herramientas
 
 
-def asistente_con(guion: list[AIMessage]) -> tuple[Asistente, LLMConGuion]:
+def asistente_con(guion: list[AIMessage], casos: CasosFalsos | None = None) -> tuple[Asistente, LLMConGuion]:
     llm = LLMConGuion(guion=guion)
-    return Asistente(llm, crear_herramientas(backend_que_sabe_todo(), ConocimientoFalso())), llm
+    return Asistente(llm, herramientas_falsas(casos=casos)), llm
 
 
 def test_sin_herramientas_responde_directo():
@@ -89,3 +88,27 @@ def test_un_argumento_invalido_no_tumba_el_agente_y_el_llm_ve_el_error():
     assert respuesta.texto == "No tenemos sucursal en Cancún."
     error = llm.recibido[1][-1]
     assert isinstance(error, ToolMessage) and error.status == "error"
+
+
+def test_una_queja_completa_termina_con_folio_guardado():
+    casos = CasosFalsos()
+    asistente, llm = asistente_con(
+        [
+            pide(
+                "levantar_queja",
+                numero_guia="PEC0000000018",
+                descripcion="la caja llegó con el vaso roto",
+                contacto="ana@correo.mx",
+            ),
+            AIMessage("Listo, tu queja quedó con el folio Q-000001."),
+        ],
+        casos,
+    )
+
+    respuesta = asistente.responder(
+        [Mensaje("cliente", "mi vaso llegó roto, guía PEC0000000018, ana@correo.mx")]
+    )
+
+    assert "Q-000001" in respuesta.texto
+    assert casos.registrados[0].categoria == "DANO"
+    assert "folio Q-000001" in llm.recibido[1][-1].text
