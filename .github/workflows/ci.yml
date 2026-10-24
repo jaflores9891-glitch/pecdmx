@@ -205,6 +205,19 @@ jobs:
       - name: Construir la imagen
         run: docker build -t pecdmx-chatbot .
 
+      # El "examen final" con el LLM real (scripts/evaluar.py). Usa los secretos del repo
+      # (Settings → Secrets and variables → Actions). Sin ellos, se salta con un aviso.
+      - name: Evaluación con el LLM real
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -z "$GROQ_API_KEY" ] && [ -z "$GEMINI_API_KEY" ]; then
+            echo "::notice::No hay secretos GROQ_API_KEY ni GEMINI_API_KEY: se salta la evaluación."
+            exit 0
+          fi
+          uv run python scripts/evaluar.py
+
   # "Semáforo final": GitHub exige solo este check para aceptar cambios en main.
   # Cada job nuevo se agrega a la lista "needs" y así no hay que tocar la regla de GitHub.
   # Un job "saltado" (porque su carpeta no cambió) cuenta como bien; uno que falló o se canceló, no.
