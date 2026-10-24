@@ -39,6 +39,23 @@ describe('App', () => {
     expect(screen.getByRole('tabpanel')).toHaveTextContent('cuánto cuesta enviar')
   })
 
+  it('la pestaña Asistente abre el chat', async () => {
+    const persona = userEvent.setup()
+    render(<App />)
+
+    await persona.click(screen.getByRole('tab', { name: 'Asistente' }))
+
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Soy el asistente de PECDMX')
+    expect(screen.getByLabelText('Tu mensaje')).toBeInTheDocument()
+  })
+
+  it('al abrir la página despierta al chatbot', () => {
+    render(<App />)
+
+    const direcciones = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
+    expect(direcciones.some((url) => url.endsWith('/salud'))).toBe(true)
+  })
+
   it('enlaza al código en GitHub', () => {
     render(<App />)
 
