@@ -1,5 +1,5 @@
-# Receta de la "caja" del chatbot. Dos etapas: la primera instala las librerías con uv;
-# la segunda solo copia lo necesario para correr (sin uv, sin pytest ni ruff).
+# Receta de la "caja" del chatbot. Dos etapas: la primera instala las librerías con uv y descarga el
+# modelo de embeddings; la segunda solo copia lo necesario para correr (sin uv, sin pytest ni ruff).
 
 # --- Etapa 1: instalar ---
 FROM python:3.12-slim AS construccion
@@ -9,11 +9,16 @@ COPY --from=ghcr.io/astral-sh/uv:0.12 /uv /bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
 
-# Primero solo las dependencias: si no cambian, Docker reutiliza esta capa.
+# El modelo de embeddings (135 MB) va primero: es lo que menos cambia, así Docker reutiliza esta capa.
+# El script descarga una versión fija y verifica las huellas SHA-256; si no coinciden, la construcción falla.
+COPY scripts/descargar_modelo.py scripts/
+RUN python scripts/descargar_modelo.py /app/modelos
+
+# Después las dependencias: si no cambian, Docker reutiliza esta capa.
 COPY pyproject.toml uv.lock ./
 RUN uv sync --locked --no-dev --no-install-project
 
-# Después el código. --no-editable lo instala dentro de .venv, así la etapa final no necesita src/.
+# Al final el código. --no-editable lo instala dentro de .venv, así la etapa final no necesita src/.
 COPY src/ src/
 RUN uv sync --locked --no-dev --no-editable
 
@@ -23,8 +28,9 @@ WORKDIR /app
 
 # Nunca correr como administrador (root).
 RUN useradd --system --no-create-home pecdmx
+COPY --from=construccion /app/modelos /app/modelos
 COPY --from=construccion /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 MODELO_CARPETA=/app/modelos
 USER pecdmx
 
 EXPOSE 8000
