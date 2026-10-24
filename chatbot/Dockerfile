@@ -30,7 +30,9 @@ WORKDIR /app
 RUN useradd --system --no-create-home pecdmx
 COPY --from=construccion /app/modelos /app/modelos
 COPY --from=construccion /app/.venv /app/.venv
-ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 MODELO_CARPETA=/app/modelos
+# Las políticas que consulta el RAG (se indexan al arrancar, solo si cambiaron).
+COPY politicas/ /app/politicas/
+ENV PATH="/app/.venv/bin:$PATH" PYTHONUNBUFFERED=1 MODELO_CARPETA=/app/modelos POLITICAS_CARPETA=/app/politicas
 USER pecdmx
 
 EXPOSE 8000
