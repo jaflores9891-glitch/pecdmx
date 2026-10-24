@@ -36,6 +36,12 @@ class Configuracion(BaseSettings):
     # Por defecto, chatbot/modelos/; en Docker se indica con la variable MODELO_CARPETA.
     modelo_carpeta: Path = Path(__file__).resolve().parents[2] / "modelos"
 
+    # Las políticas de PECDMX que consulta el RAG (archivos .md). En Docker: POLITICAS_CARPETA.
+    politicas_carpeta: Path = Path(__file__).resolve().parents[2] / "politicas"
+
+    # PostgreSQL con pgvector (Neon en producción), formato postgresql://usuario:contraseña@host/base
+    database_url: SecretStr | None = None
+
 
 @lru_cache
 def configuracion() -> Configuracion:
