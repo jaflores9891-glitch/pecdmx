@@ -32,8 +32,10 @@ def proveedores_configurados(config: Configuracion) -> list[BaseChatModel]:
                 api_key=config.groq_api_key,
                 temperature=config.llm_temperatura,
                 timeout=config.llm_espera_segundos,
-                # Un solo reintento: si falla, es mejor pasar rápido al respaldo que hacer esperar al cliente.
-                max_retries=1,
+                # Hasta 3 reintentos: el error más común es el límite por minuto de Groq, que pide esperar
+                # milisegundos ("try again in 15ms"). Reintentar es mejor que gastar el cupo diario de Gemini.
+                # Para errores largos, el timeout corta la espera y entra el respaldo.
+                max_retries=3,
             )
         )
     if config.gemini_api_key:
