@@ -1,0 +1,156 @@
+texto,categoria
+mi paquete ya debía haber llegado hace tres días y sigue sin llegar,RETRASO
+el envío va muy atrasado,RETRASO
+me dijeron que llegaba el lunes y ya es jueves,RETRASO
+llevo una semana esperando mi caja y nada,RETRASO
+"el rastreo dice en tránsito desde hace días, ¿por qué tarda tanto?",RETRASO
+el paquete está tardando demasiado,RETRASO
+pagué el envío y no ha llegado en el tiempo que me prometieron,RETRASO
+ya pasó la fecha de entrega y todavía no llega,RETRASO
+mi pedido viene retrasado y lo necesito urgente,RETRASO
+"siempre tardan mucho, mi envío a Monterrey lleva 5 días",RETRASO
+la entrega se atrasó otra vez,RETRASO
+no ha llegado a la sucursal de destino y ya debería,RETRASO
+están muy lentos con mi envío,RETRASO
+me urge mi paquete y sigue detenido en tránsito,RETRASO
+el paquete salió de Puebla hace días y no avanza a Tijuana,RETRASO
+quedaron de entregar ayer y no cumplieron,RETRASO
+"es la tercera vez que cambian la fecha de llegada, qué mal servicio",RETRASO
+mi caja lleva días en camino y no llega a Guadalajara,RETRASO
+tardaron el doble de lo que dijeron,RETRASO
+"el envío se demoró muchísimo, llegó una semana tarde",RETRASO
+aún no llega mi paquete y ya pasaron los días hábiles,RETRASO
+la entrega va con retraso y nadie me da razón,RETRASO
+"mi envío está atorado en Querétaro desde el martes",RETRASO
+llegó tarde mi paquete y era un regalo de cumpleaños,RETRASO
+"el tiempo de entrega no se cumplió, lo quiero reportar",RETRASO
+el paquete sigue sin moverse de la sucursal de origen,RETRASO
+me llegó roto el paquete,DANO
+la caja venía aplastada y el contenido dañado,DANO
+el vaso de vidrio llegó hecho pedazos,DANO
+mi paquete llegó mojado y se arruinaron los papeles,DANO
+el televisor llegó con la pantalla estrellada,DANO
+"abrí la caja y la lámpara venía quebrada",DANO
+la caja llegó toda golpeada y abierta,DANO
+el producto llegó maltratado,DANO
+se rompió la cerámica que mandé,DANO
+mi laptop llegó con un golpe y ya no prende,DANO
+"el empaque venía rasgado y faltaba una pieza rota",DANO
+llegó dañada la mercancía,DANO
+el pastel llegó destruido,DANO
+las botellas llegaron rotas y todo derramado,DANO
+"recogí mi paquete y estaba abollado, el aparato no sirve",DANO
+la caja tenía un hoyo y el contenido estaba rayado,DANO
+me entregaron el paquete deshecho,DANO
+el espejo llegó estrellado,DANO
+"maltrataron mi envío, la caja llegó despedazada",DANO
+la bicicleta llegó con el manubrio doblado,DANO
+mi celular llegó con la pantalla rota,DANO
+se mojó la ropa que envié porque la caja venía empapada,DANO
+"el cuadro llegó con el vidrio quebrado",DANO
+la mesa llegó con una pata rota,DANO
+el contenido llegó en mal estado por culpa de ustedes,DANO
+perdieron mi paquete,EXTRAVIO
+no encuentran mi caja en ninguna sucursal,EXTRAVIO
+el rastreo dice entregado pero yo nunca lo recogí,EXTRAVIO
+mi envío se perdió,EXTRAVIO
+"fui a la sucursal y me dijeron que no saben dónde está mi paquete",EXTRAVIO
+extraviaron mi paquete,EXTRAVIO
+mi paquete desapareció,EXTRAVIO
+el número de guía no aparece y mi caja no está en ningún lado,EXTRAVIO
+"dice que ya lo entregaron, pero nadie de mi familia lo recibió",EXTRAVIO
+me robaron el paquete en el camino,EXTRAVIO
+nadie sabe dónde quedó mi envío,EXTRAVIO
+llevan dos semanas buscando mi caja y no aparece,EXTRAVIO
+"mi paquete se extravió entre Monterrey y Tijuana",EXTRAVIO
+no está mi paquete en la sucursal aunque dice que llegó,EXTRAVIO
+lo entregaron a otra persona que no soy yo,EXTRAVIO
+"el paquete nunca apareció, quiero mi reembolso por pérdida",EXTRAVIO
+se les perdió mi caja,EXTRAVIO
+la sucursal dice que no tienen registro de mi paquete,EXTRAVIO
+"mi envío se esfumó, no hay rastro",EXTRAVIO
+no saben darme razón de mi paquete perdido,EXTRAVIO
+el paquete no aparece desde hace diez días,EXTRAVIO
+alguien más recogió mi paquete con mi guía,EXTRAVIO
+dejaron de actualizar el rastreo y nadie encuentra el paquete,EXTRAVIO
+"lo mandé hace un mes y no llegó nunca, está perdido",EXTRAVIO
+me dicen que se traspapeló mi envío,EXTRAVIO
+la empleada de la sucursal fue muy grosera,OTRO
+me cobraron más de lo que decía la cotización,OTRO
+"la fila en la sucursal era larguísima, pésimo servicio",OTRO
+nadie contesta el teléfono de la sucursal,OTRO
+la sucursal estaba cerrada en horario de atención,OTRO
+el empleado no me quiso dar factura,OTRO
+me trataron mal cuando fui a dejar mi paquete,OTRO
+la página no me deja cotizar,OTRO
+me cobraron el IVA dos veces,OTRO
+quiero hablar con un gerente por la mala atención,OTRO
+el guardia de la sucursal fue muy prepotente,OTRO
+no me aceptaron mi paquete sin explicarme por qué,OTRO
+el cajero me dio mal el cambio,OTRO
+"esperé una hora para que me atendieran",OTRO
+el chatbot no me entiende,OTRO
+la sucursal está sucia y desordenada,OTRO
+me pidieron una identificación que no traía y nadie me ayudó,OTRO
+el precio subió sin aviso,OTRO
+el empleado me habló de forma muy grosera por teléfono,OTRO
+la terminal para pagar con tarjeta no servía,OTRO
+me hicieron pagar dos veces el mismo envío,OTRO
+no me dieron mi comprobante de envío,OTRO
+la atención al cliente es pésima,OTRO
+"me cobraron peso volumétrico y nadie me explicó qué es",OTRO
+el estacionamiento de la sucursal siempre está lleno,OTRO
+mi caja no ha llegado y ya se pasó el plazo de entrega,RETRASO
+hace cuatro días que debió estar en la sucursal y no está,RETRASO
+"el envío exprés tardó como uno normal, llegó tardísimo",RETRASO
+mi paquete va lentísimo,RETRASO
+"sigue en camino, pero ya debería haber llegado desde el viernes",RETRASO
+el paquete se quedó detenido varios días y llegará tarde,RETRASO
+no llega mi envío a tiempo,RETRASO
+me prometieron dos días y ya van seis,RETRASO
+la entrega está demorada sin explicación,RETRASO
+"todavía no puedo recogerlo, sigue sin llegar a la sucursal",RETRASO
+el rastreo no ha cambiado en cuatro días y no llega,RETRASO
+mi envío llegó con días de retraso,RETRASO
+el paquete llegó con la caja rota y el contenido quebrado,DANO
+mis platos llegaron rotos,DANO
+la computadora llegó con la carcasa rota,DANO
+el paquete venía con humedad y el contenido se echó a perder,DANO
+"alguien abrió la caja y la cerró mal, lo de adentro venía roto",DANO
+el juguete llegó roto y le faltan piezas que se quebraron,DANO
+mi guitarra llegó con el mástil roto,DANO
+la caja llegó aplastada como si le hubieran puesto algo pesado encima,DANO
+el florero se rompió en el envío,DANO
+la impresora llegó golpeada y no funciona,DANO
+el perfume llegó derramado y la caja mojada,DANO
+el mueble llegó rayado y despostillado,DANO
+no encuentran mi paquete,EXTRAVIO
+mi caja está perdida,EXTRAVIO
+"en la sucursal de destino dicen que nunca llegó, y en la de origen que sí salió",EXTRAVIO
+perdieron mi envío y nadie se hace responsable,EXTRAVIO
+dice entregado y yo no he recogido nada,EXTRAVIO
+mi paquete se esfumó del sistema,EXTRAVIO
+el rastreo se quedó congelado hace dos semanas y nadie lo localiza,EXTRAVIO
+le dieron mi paquete a otra persona,EXTRAVIO
+no tienen idea de dónde está mi caja,EXTRAVIO
+mi envío no aparece por ningún lado,EXTRAVIO
+"buscaron mi paquete en la bodega y no estaba, lo perdieron",EXTRAVIO
+quiero reportar un paquete perdido,EXTRAVIO
+el empleado me gritó,OTRO
+me cobraron de más,OTRO
+el cobro no coincide con lo que me dijeron,OTRO
+la atención en la sucursal fue pésima,OTRO
+me atendieron de mala gana,OTRO
+la cajera fue muy grosera conmigo,OTRO
+nadie me supo explicar el precio,OTRO
+no me dieron mi ticket,OTRO
+no me quisieron recibir el paquete en la sucursal,OTRO
+la sucursal abrió tarde,OTRO
+"tardaron mucho en atenderme en la ventanilla, hay un solo empleado",OTRO
+me cobraron una comisión que nadie me explicó,OTRO
+el sistema de la sucursal estaba caído y no pude enviar,OTRO
+el plato llegó partido a la mitad,DANO
+la figura de porcelana venía partida,DANO
+la caja llegó bien pero lo de adentro venía cuarteado,DANO
+mi jarrón llegó despostillado y con una grieta,DANO
+el acrílico llegó partido en varios pedazos,DANO
