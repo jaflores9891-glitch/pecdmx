@@ -90,4 +90,9 @@ Usuarios: clientes, empleados de sucursal y gerentes.
 - [x] 3. Publicación: Render + Neon, web en Vercel, CD
 - [x] 4. Chatbot: LLM con respaldo, RAG con citas, herramientas, quejas, paso a empleado, defensas y evaluaciones
 - [x] 5. Pulido para reclutadores (README con diagramas, guías de demostración, `docs/guion-video.md`, `docs/entrevista.md`)
-- [ ] 6. (Opcional) Leer la etiqueta del paquete con foto
+- [x] 6. (Opcional) Leer la etiqueta del paquete con foto (`POST /api/etiquetas`; Qwen en Groq → `gemini-3.1-flash-lite`)
+
+## Cupos gratuitos de los modelos (medidos)
+- `gemini-3.5-flash`: solo **20 peticiones al día por modelo**; es el respaldo del chat, no gastarlo en pruebas.
+- Visión: `qwen/qwen3.8-27b` en Groq (8,000 tokens/min, ~1,830 por foto, con `reasoning_effort=none`) y
+  `gemini-3.1-flash-lite` de segunda opinión (cupo propio). Al probar, dejar ~16 s entre fotos.
